@@ -11,7 +11,8 @@ fi
 # Compulsory env vars
 : "${AZURE_RESOURCE_GROUP:?Environment variable must be set}"
 
-SSH_KEY="${SSH_KEY:-artifacts/ssh.pub}"
+ARTIFACTS_DIR="$(dirname "${BASH_SOURCE[0]}")/artifacts"
+SSH_KEY="${SSH_KEY:-${ARTIFACTS_DIR}/ssh.pub}"
 
 # If SSH_KEY is not set, generate a new SSH key
 if [ -n "${SSH_KEY:-}" ]; then
@@ -29,13 +30,13 @@ AKS_WORKER_USER_NAME="azuser"
 AKS_RG="${AZURE_RESOURCE_GROUP}-aks"
 AZURE_WORKLOAD_IDENTITY_NAME="caa-identity"
 
-info "Creating Resource Group '${AZURE_RESOURCE_GROUP}' in region '${AZURE_REGION}'..."
+info "Creating Resource Group ${AZURE_RESOURCE_GROUP} in region ${AZURE_REGION} ..."
 az group create --name "${AZURE_RESOURCE_GROUP}" \
     --location "${AZURE_REGION}"
 
 # Create AKS only if it does not exists
 if ! az aks show --resource-group "${AZURE_RESOURCE_GROUP}" --name "${CLUSTER_NAME}" >/dev/null 2>&1; then
-    info "Creating AKS cluster: ${CLUSTER_NAME}..."
+    info "Creating AKS cluster: ${CLUSTER_NAME} ..."
     az aks create \
         --resource-group "${AZURE_RESOURCE_GROUP}" \
         --node-resource-group "${AKS_RG}" \
@@ -53,7 +54,7 @@ if ! az aks show --resource-group "${AZURE_RESOURCE_GROUP}" --name "${CLUSTER_NA
 fi
 
 # TODO: Maybe we should not override the credentials
-info "Getting AKS credentials..."
+info "Getting AKS credentials ..."
 az aks get-credentials \
     --resource-group "${AZURE_RESOURCE_GROUP}" \
     --name "${CLUSTER_NAME}" \
@@ -66,7 +67,7 @@ CLUSTER_SPECIFIC_DNS_ZONE=$(az aks show \
     --query addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName -otsv)
 export CLUSTER_SPECIFIC_DNS_ZONE
 
-info "Creating Azure Identity: ${AZURE_WORKLOAD_IDENTITY_NAME}..."
+info "Creating Azure Identity: ${AZURE_WORKLOAD_IDENTITY_NAME} ..."
 az identity create \
     --name "${AZURE_WORKLOAD_IDENTITY_NAME}" \
     --resource-group "${AZURE_RESOURCE_GROUP}" \
@@ -99,7 +100,7 @@ for i in {1..10}; do
         --id "${USER_ASSIGNED_CLIENT_ID}" >/dev/null 2>&1; then
         break
     fi
-    info "Waiting for service principal to be created..."
+    info "Waiting for service principal to be created ..."
     sleep 5
 done
 
