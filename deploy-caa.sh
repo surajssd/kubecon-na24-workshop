@@ -10,6 +10,7 @@ fi
 
 # Compulsory env vars
 : "${AZURE_RESOURCE_GROUP}:?"
+: "${KBS_URL}:?"
 
 ARTIFACTS_DIR="$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)/artifacts"
 
@@ -113,6 +114,7 @@ configMapGenerator:
   - AZURE_SUBNET_ID="${AZURE_SUBNET_ID}"
   - AZURE_IMAGE_ID="${AZURE_IMAGE_ID}"
   - DISABLECVM="${DISABLECVM}"
+  - AA_KBC_PARAMS="cc_kbc::http://${KBS_URL}"
 secretGenerator:
 - name: peer-pods-secret
   namespace: confidential-containers-system
