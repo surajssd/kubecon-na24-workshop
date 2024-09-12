@@ -1,16 +1,16 @@
 #!/usr/bin/env bash
 
-# Create a print function that will print the message in green
+# Print the message in green
 function info() {
     echo -e "\e[32m$1\e[0m"
 }
 
-# Create a print function that will print the message in red
+# Print the message in red
 function error() {
     echo -e "\e[31m$1\e[0m"
 }
 
-# Create a print function that will print the message in yellow
+# Print the message in yellow
 function warn() {
     echo -e "\e[33m$1\e[0m"
 }
