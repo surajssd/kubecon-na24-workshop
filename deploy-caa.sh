@@ -143,3 +143,13 @@ for i in {1..20}; do
     info "Waiting for runtimeclass to be created..."
     sleep 6
 done
+
+# Wait until the pod created by cloud-api-adaptor-daemonset in the namespace cloud-api-adaptor-daemonset is Ready
+for i in {1..20}; do
+    if kubectl get pod -n confidential-containers-system -l app=cloud-api-adaptor -o jsonpath='{.items[0].status.phase}' | grep -q Running; then
+        break
+    fi
+
+    info "Waiting for cloud-api-adaptor-daemonset pod to be Ready..."
+    sleep 6
+done
