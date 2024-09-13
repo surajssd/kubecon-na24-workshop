@@ -54,12 +54,6 @@ AZURE_SUBNET_ID=$(az network vnet subnet list \
     --output tsv)
 export AZURE_SUBNET_ID
 
-CLUSTER_SPECIFIC_DNS_ZONE=$(az aks show \
-    --resource-group "${AZURE_RESOURCE_GROUP}" \
-    --name "${CLUSTER_NAME}" \
-    --query addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName -otsv)
-export CLUSTER_SPECIFIC_DNS_ZONE
-
 # Pull the CAA code
 if [ ! -d "${CAA_CODE}" ]; then
     pushd ${ARTIFACTS_DIR}

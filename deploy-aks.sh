@@ -60,13 +60,6 @@ az aks get-credentials \
     --name "${CLUSTER_NAME}" \
     --overwrite-existing
 
-# TODO: Figure out a better way to expose the apps on AKS.
-CLUSTER_SPECIFIC_DNS_ZONE=$(az aks show \
-    --resource-group "${AZURE_RESOURCE_GROUP}" \
-    --name "${CLUSTER_NAME}" \
-    --query addonProfiles.httpApplicationRouting.config.HTTPApplicationRoutingZoneName -otsv)
-export CLUSTER_SPECIFIC_DNS_ZONE
-
 info "Creating Azure Identity: ${AZURE_WORKLOAD_IDENTITY_NAME} ..."
 az identity create \
     --name "${AZURE_WORKLOAD_IDENTITY_NAME}" \
@@ -118,6 +111,3 @@ az role assignment create \
     --role 'Network Contributor' \
     --assignee "$USER_ASSIGNED_CLIENT_ID" \
     --scope "/subscriptions/${AZURE_SUBSCRIPTION_ID}/resourcegroups/${AKS_RG}"
-
-warn "Run the following command before deploying KBS:"
-warn "export CLUSTER_SPECIFIC_DNS_ZONE=${CLUSTER_SPECIFIC_DNS_ZONE}"
