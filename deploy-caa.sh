@@ -56,6 +56,7 @@ export AZURE_SUBNET_ID
 
 # Pull the CAA code
 if [ ! -d "${CAA_CODE}" ]; then
+    info "Getting the Cloud API Adaptor release..."
     pushd ${ARTIFACTS_DIR}
     curl -LO "https://github.com/confidential-containers/cloud-api-adaptor/archive/refs/tags/v${CAA_VERSION}.tar.gz"
     tar -xvzf "v${CAA_VERSION}.tar.gz"
@@ -125,9 +126,11 @@ EOF
 cp $SSH_KEY install/overlays/azure/id_rsa.pub
 
 # Install operator
+info "Installing the Confidential Containers Operator..."
 kubectl apply -k "github.com/confidential-containers/operator/config/release?ref=v${COCO_OPERATOR_VERSION}"
 kubectl apply -k "github.com/confidential-containers/operator/config/samples/ccruntime/peer-pods?ref=v${COCO_OPERATOR_VERSION}"
 
+info "Installing the Cloud API Adaptor..."
 kubectl apply -k "install/overlays/azure"
 
 # Wait until the runtimeclass is created

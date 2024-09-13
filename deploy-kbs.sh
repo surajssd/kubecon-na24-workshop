@@ -10,10 +10,12 @@ fi
 
 # Compulsory env vars
 : "${KEY_FILE}:?"
+KEY_FILE="$(realpath "${KEY_FILE}")"
 
 ARTIFACTS_DIR="$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)/artifacts"
 KBS_VERSION="${KBS_VERSION:-0.9.0}"
 KBS_CODE="${ARTIFACTS_DIR}/trustee-${KBS_VERSION}"
+KBS_IMAGE="ghcr.io/confidential-containers/staged-images/kbs:e890fc90c384207668fa3a4d6a2f2a2d652797ee"
 
 # Pull the KBS code base if it is not available
 if [ ! -d "${KBS_CODE}" ]; then
@@ -26,16 +28,14 @@ fi
 pushd "${KBS_CODE}/kbs/config/kubernetes"
 
 pushd base
-kustomize edit set image kbs-container-image=ghcr.io/confidential-containers/staged-images/kbs:e890fc90c384207668fa3a4d6a2f2a2d652797ee
+kustomize edit set image kbs-container-image=${KBS_IMAGE}
 popd
 
 pushd overlays
-
 # Convert the KEY_FILE to an absolute path if it is not
-KEY_FILE="$(realpath "${KEY_FILE}")"
 cp ${KEY_FILE} key.bin
-
 popd
 
 export DEPLOYMENT_DIR=nodeport
 ./deploy-kbs.sh
+info "KBS deployed successfully!"
