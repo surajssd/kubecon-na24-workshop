@@ -107,6 +107,8 @@ configMapGenerator:
   namespace: confidential-containers-system
   literals:
   - CLOUD_PROVIDER="azure"
+  - ENABLE_CLOUD_PROVIDER_EXTERNAL_PLUGIN="false"
+  - CLOUD_CONFIG_VERIFY="false"
   - AZURE_SUBSCRIPTION_ID="${AZURE_SUBSCRIPTION_ID}"
   - AZURE_REGION="${AZURE_REGION}"
   - AZURE_INSTANCE_SIZE="${AZURE_INSTANCE_SIZE}"
