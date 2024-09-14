@@ -9,50 +9,43 @@ if [ "${DEBUG:-false}" = "true" ]; then
 fi
 
 # Compulsory env vars
-: "${AZURE_RESOURCE_GROUP}:?"
-: "${KBS_URL}:?"
+: "${AZURE_RESOURCE_GROUP:?Environment variable must be set}"
+: "${AZURE_REGION:?Environment variable must be set}"
+: "${CLUSTER_NAME:?Environment variable must be set}"
+: "${AZURE_INSTANCE_SIZE:?Environment variable must be set}"
+: "${AZURE_WORKLOAD_IDENTITY_NAME:?Environment variable must be set}"
+
+: "${CAA_IMAGE:?Environment variable must be set}"
+: "${CAA_VERSION:?Environment variable must be set}"
+: "${CAA_TAG:?Environment variable must be set}"
+: "${COCO_OPERATOR_VERSION:?Environment variable must be set}"
 
 ARTIFACTS_DIR="$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)/artifacts"
-
 SSH_KEY="${SSH_KEY:-${ARTIFACTS_DIR}/ssh.pub}"
-AZURE_REGION=${AZURE_REGION:-northeurope}
-CLUSTER_NAME="${CLUSTER_NAME:-caa-aks}"
-
-CAA_IMAGE="${CAA_IMAGE:-quay.io/confidential-containers/cloud-api-adaptor}"
-CAA_VERSION="${CAA_VERSION:-0.9.0}"
-CAA_TAG="${CAA_TAG:-v0.9.0-amd64}"
-COCO_OPERATOR_VERSION="${COCO_OPERATOR_VERSION:-0.9.0}"
-
 CAA_CODE="${ARTIFACTS_DIR}/cloud-api-adaptor-${CAA_VERSION}"
 
-AZURE_INSTANCE_SIZE="Standard_DC2as_v5"
 DISABLECVM="false"
-
 AZURE_SUBSCRIPTION_ID=$(az account show --query id --output tsv)
 AKS_RG="${AZURE_RESOURCE_GROUP}-aks"
 
 AZURE_IMAGE_ID="/CommunityGalleries/cocopodvm-d0e4f35f-5530-4b9c-8596-112487cdea85/Images/podvm_image0/Versions/${CAA_VERSION}"
-AZURE_WORKLOAD_IDENTITY_NAME="caa-identity"
 
 USER_ASSIGNED_CLIENT_ID="$(az identity show \
     --resource-group "${AZURE_RESOURCE_GROUP}" \
     --name "${AZURE_WORKLOAD_IDENTITY_NAME}" \
     --query 'clientId' \
     -otsv)"
-export USER_ASSIGNED_CLIENT_ID
 
 AZURE_VNET_NAME=$(az network vnet list \
     --resource-group "${AKS_RG}" \
     --query "[0].name" \
     --output tsv)
-export AZURE_VNET_NAME
 
 AZURE_SUBNET_ID=$(az network vnet subnet list \
     --resource-group "${AKS_RG}" \
     --vnet-name "${AZURE_VNET_NAME}" \
     --query "[0].id" \
     --output tsv)
-export AZURE_SUBNET_ID
 
 # Pull the CAA code
 if [ ! -d "${CAA_CODE}" ]; then
@@ -85,6 +78,8 @@ metadata:
   annotations:
     azure.workload.identity/client-id: "$USER_ASSIGNED_CLIENT_ID"
 EOF
+
+KBS_URL=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}'):$(kubectl get svc kbs -n coco-tenant -o jsonpath='{.spec.ports[0].nodePort}')
 
 cat <<EOF >install/overlays/azure/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
@@ -134,21 +129,22 @@ info "Installing the Cloud API Adaptor..."
 kubectl apply -k "install/overlays/azure"
 
 # Wait until the runtimeclass is created
-for i in {1..20}; do
+MAX_RETRIES=20
+for i in $(seq 1 $MAX_RETRIES); do
     if kubectl get runtimeclass kata-remote >/dev/null 2>&1; then
         break
     fi
 
-    info "Waiting for runtimeclass to be created..."
-    sleep 6
+    info "Waiting for runtimeclass to be created for $((2 ** (i - 1))) seconds..."
+    sleep $((2 ** (i - 1)))
 done
 
 # Wait until the pod created by cloud-api-adaptor-daemonset in the namespace cloud-api-adaptor-daemonset is Ready
-for i in {1..20}; do
+for i in $(seq 1 $MAX_RETRIES); do
     if kubectl get pod -n confidential-containers-system -l app=cloud-api-adaptor -o jsonpath='{.items[0].status.phase}' | grep -q Running; then
         break
     fi
 
-    info "Waiting for cloud-api-adaptor-daemonset pod to be Ready..."
-    sleep 6
+    info "Waiting for cloud-api-adaptor-daemonset pod to be Ready for $((2 ** (i - 1))) seconds..."
+    sleep $((2 ** (i - 1)))
 done
