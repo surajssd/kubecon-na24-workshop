@@ -10,6 +10,11 @@ fi
 
 # Compulsory env vars
 : "${AZURE_RESOURCE_GROUP:?Environment variable must be set}"
+: "${AZURE_REGION:?Environment variable must be set}"
+: "${AZURE_WORKLOAD_IDENTITY_NAME:?Environment variable must be set}"
+: "${CLUSTER_NAME:?Environment variable must be set}"
+: "${AKS_WORKER_NODE_SIZE:?Environment variable must be set}"
+: "${AKS_WORKER_USER_NAME:?Environment variable must be set}"
 
 ARTIFACTS_DIR="$(dirname "${BASH_SOURCE[0]}")/artifacts"
 SSH_KEY="${SSH_KEY:-${ARTIFACTS_DIR}/ssh.pub}"
@@ -19,16 +24,9 @@ if [ -n "${SSH_KEY:-}" ]; then
     generate_ssh_key "${SSH_KEY}"
 fi
 
-# Optional env vars
-AZURE_REGION=${AZURE_REGION:-northeurope}
-CLUSTER_NAME="${CLUSTER_NAME:-caa-aks}"
-AKS_WORKER_NODE_SIZE="${AKS_WORKER_NODE_SIZE:-Standard_F4s_v2}"
-
 # Static env vars
 AZURE_SUBSCRIPTION_ID=$(az account show --query id --output tsv)
-AKS_WORKER_USER_NAME="azuser"
 AKS_RG="${AZURE_RESOURCE_GROUP}-aks"
-AZURE_WORKLOAD_IDENTITY_NAME="caa-identity"
 
 info "Creating Resource Group ${AZURE_RESOURCE_GROUP} in region ${AZURE_REGION} ..."
 az group create --name "${AZURE_RESOURCE_GROUP}" \
@@ -71,7 +69,6 @@ AKS_OIDC_ISSUER="$(az aks show \
     --resource-group "${AZURE_RESOURCE_GROUP}" \
     --query "oidcIssuerProfile.issuerUrl" \
     -otsv)"
-export AKS_OIDC_ISSUER
 
 az identity federated-credential create \
     --name caa-fedcred \
@@ -86,15 +83,15 @@ USER_ASSIGNED_CLIENT_ID="$(az identity show \
     --name "${AZURE_WORKLOAD_IDENTITY_NAME}" \
     --query 'clientId' \
     -otsv)"
-export USER_ASSIGNED_CLIENT_ID
 
-for i in {1..10}; do
+MAX_RETRIES=20
+for i in $(seq 1 $MAX_RETRIES); do
     if az ad sp show \
         --id "${USER_ASSIGNED_CLIENT_ID}" >/dev/null 2>&1; then
         break
     fi
-    info "Waiting for service principal to be created ..."
-    sleep 5
+    info "Waiting for service principal to be created for $((2 ** (i - 1))) seconds..."
+    sleep $((2 ** (i - 1)))
 done
 
 az role assignment create \
