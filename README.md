@@ -1,7 +1,18 @@
+Make a copy of the sample env file and modify it as needed:
+
+```bash
+cp .env-sample .env
+```
+
+Source the env var file:
+
+```bash
+source .env
+```
+
 Install AKS
 
 ```bash
-export AZURE_RESOURCE_GROUP="suraj-caa0913-2"
 ./deploy-aks.sh
 ```
 
@@ -17,7 +28,6 @@ cat $KEY_FILE
 Install CAA
 
 ```bash
-export KBS_URL=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}'):$(kubectl get svc kbs -n coco-tenant -o jsonpath='{.spec.ports[0].nodePort}')
 ./deploy-caa.sh
 ```
 
@@ -53,6 +63,7 @@ EOF
 Now compare the key file coming from KBS and the one available locally:
 
 ```bash
+kubectl -n default get pods
 kubectl -n default exec -it $(kubectl -n default get pods -l app=nginx -o name) -- curl http://127.0.0.1:8006/cdh/resource/reponame/workload_key/key.bin
 cat $KEY_FILE
 ```
