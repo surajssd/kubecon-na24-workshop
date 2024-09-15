@@ -24,6 +24,12 @@ if [ -n "${SSH_KEY:-}" ]; then
     generate_ssh_key "${SSH_KEY}"
 fi
 
+# Check if the user has logged in, if not then trigger a login
+if ! az account show >/dev/null 2>&1; then
+    az config set core.login_experience_v2=off
+    az login --use-device-code
+fi
+
 # Static env vars
 AZURE_SUBSCRIPTION_ID=$(az account show --query id --output tsv)
 AKS_RG="${AZURE_RESOURCE_GROUP}-aks"
