@@ -31,8 +31,8 @@ Install CAA
 Generate a key and upload to KBS
 
 ```bash
-export KEY_ID=reponame/workload_key/key.bin
-export KEY_FILE=artifacts/keyfile
+export KEY_ID="/reponame/workload_key/key.bin"
+export KEY_FILE="artifacts/keyfile"
 echo "this is important security file $RANDOM-$RANDOM" > $KEY_FILE
 cat $KEY_FILE
 
@@ -108,4 +108,8 @@ spec:
         - containerPort: 80
         imagePullPolicy: Always
 EOF
+```
+
+```bash
+kubectl -n default exec -it $(kubectl -n default get pods -l app=nginx-encrypted -o name) -- curl localhost
 ```
