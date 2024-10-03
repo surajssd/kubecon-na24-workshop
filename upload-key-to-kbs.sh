@@ -29,5 +29,8 @@ KEY_ID="${2}"
 KBS_POD=$(kubectl get pods -n coco-tenant -l app=kbs -o jsonpath='{.items[0].metadata.name}')
 
 # Create the directory in the KBS repository
-kubectl exec -n coco-tenant "${KBS_POD}" -- mkdir -p "$(dirname /opt/confidential-containers/kbs/repository/${KEY_ID})"
-kubectl cp -n coco-tenant "${KEY_FILE}" "${KBS_POD}:/opt/confidential-containers/kbs/repository/${KEY_ID}"
+KEY_PATH_IN_POD="/opt/confidential-containers/kbs/repository/${KEY_ID}"
+kubectl exec -n coco-tenant "${KBS_POD}" -- mkdir -p "$(dirname ${KEY_PATH_IN_POD})"
+kubectl cp -n coco-tenant "${KEY_FILE}" "${KBS_POD}:${KEY_PATH_IN_POD}"
+
+info "Key uploaded to KBS!"
