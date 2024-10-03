@@ -79,6 +79,12 @@ metadata:
     azure.workload.identity/client-id: "$USER_ASSIGNED_CLIENT_ID"
 EOF
 
+# If the KBS service is not deployed then fail
+if ! kubectl get svc kbs -n coco-tenant >/dev/null 2>&1; then
+    error "KBS is not deployed. Please deploy KBS and try again."
+    exit 1
+fi
+
 KBS_URL=$(kubectl get nodes -o jsonpath='{.items[0].status.addresses[0].address}'):$(kubectl get svc kbs -n coco-tenant -o jsonpath='{.spec.ports[0].nodePort}')
 
 cat <<EOF >install/overlays/azure/kustomization.yaml
