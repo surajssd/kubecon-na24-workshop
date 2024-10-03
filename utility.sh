@@ -24,6 +24,5 @@ function generate_ssh_key() {
     fi
 
     info "Generating SSH key..."
-    mkdir -p $(dirname "${SSH_KEY}")
     ssh-keygen -t rsa -b 4096 -f "${SSH_KEY%.pub}" -N "" -C "SSH key for CAA AKS cluster"
 }

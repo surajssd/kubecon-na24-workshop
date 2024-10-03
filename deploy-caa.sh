@@ -9,6 +9,7 @@ if [ "${DEBUG:-false}" = "true" ]; then
 fi
 
 # Compulsory env vars
+: "${ARTIFACTS_DIR:?Environment variable must be set}"
 : "${AZURE_RESOURCE_GROUP:?Environment variable must be set}"
 : "${AZURE_REGION:?Environment variable must be set}"
 : "${CLUSTER_NAME:?Environment variable must be set}"
@@ -20,7 +21,6 @@ fi
 : "${CAA_TAG:?Environment variable must be set}"
 : "${COCO_OPERATOR_VERSION:?Environment variable must be set}"
 
-ARTIFACTS_DIR="$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)/artifacts"
 SSH_KEY="${SSH_KEY:-${ARTIFACTS_DIR}/ssh.pub}"
 CAA_CODE="${ARTIFACTS_DIR}/cloud-api-adaptor-${CAA_VERSION}"
 

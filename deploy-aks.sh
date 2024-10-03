@@ -15,8 +15,8 @@ fi
 : "${CLUSTER_NAME:?Environment variable must be set}"
 : "${AKS_WORKER_NODE_SIZE:?Environment variable must be set}"
 : "${AKS_WORKER_USER_NAME:?Environment variable must be set}"
+: "${ARTIFACTS_DIR:?Environment variable must be set}"
 
-ARTIFACTS_DIR="$(dirname "${BASH_SOURCE[0]}")/artifacts"
 SSH_KEY="${SSH_KEY:-${ARTIFACTS_DIR}/ssh.pub}"
 
 # If SSH_KEY is not set, generate a new SSH key
