@@ -9,13 +9,11 @@ if [ "${DEBUG:-false}" = "true" ]; then
 fi
 
 # Compulsory env vars
-: "${KEY_FILE}:?"
-KEY_FILE="$(realpath "${KEY_FILE}")"
+: "${ARTIFACTS_DIR:?Environment variable must be set}"
+: "${KBS_VERSION:?Environment variable must be set}"
+: "${KBS_IMAGE:?Environment variable must be set}"
 
-ARTIFACTS_DIR="$(cd $(dirname "${BASH_SOURCE[0]}") && pwd)/artifacts"
-KBS_VERSION="${KBS_VERSION:-0.9.0}"
 KBS_CODE="${ARTIFACTS_DIR}/trustee-${KBS_VERSION}"
-KBS_IMAGE="ghcr.io/confidential-containers/staged-images/kbs:e890fc90c384207668fa3a4d6a2f2a2d652797ee"
 
 # Pull the KBS code base if it is not available
 if [ ! -d "${KBS_CODE}" ]; then
@@ -29,13 +27,26 @@ pushd "${KBS_CODE}/kbs/config/kubernetes"
 
 pushd base
 kustomize edit set image kbs-container-image=${KBS_IMAGE}
-popd
-
-pushd overlays
-# Convert the KEY_FILE to an absolute path if it is not
-cp ${KEY_FILE} key.bin
+openssl genpkey -algorithm ed25519 >kbs.key
+openssl pkey -in kbs.key -pubout -out kbs.pem
 popd
 
 export DEPLOYMENT_DIR=nodeport
-./deploy-kbs.sh
+cat <<EOF >$DEPLOYMENT_DIR/kustomization.yaml
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: coco-tenant
+
+resources:
+- ../base
+
+patches:
+- path: patch.yaml
+  target:
+    group: ""
+    kind: Service
+    name: kbs
+EOF
+
+kustomize build $DEPLOYMENT_DIR | kubectl apply -f -
 info "KBS deployed successfully!"
