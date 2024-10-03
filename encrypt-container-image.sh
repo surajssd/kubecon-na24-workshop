@@ -15,6 +15,7 @@ fi
 : "${COCO_KEY_PROVIDER:?Environment variable must be set}"
 
 # Ensure we pull the images that are needed to perfom the encryption
+info "Pulling images ..."
 docker pull "${SOURCE_IMAGE}"
 docker pull "${COCO_KEY_PROVIDER}"
 
