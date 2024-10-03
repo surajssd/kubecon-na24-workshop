@@ -20,4 +20,4 @@ function check_cli() {
 }
 
 # Check if the required CLIs are installed
-check_cli "curl" "python3" "az" "kustomize" "kubectl" "git"
+check_cli "curl" "python3" "az" "kustomize" "kubectl" "git" "openssl" "skopeo"
