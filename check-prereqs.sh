@@ -29,6 +29,12 @@ function check_cli() {
             "skopeo")
                 error "To install Skopeo follow instructions here: https://github.com/containers/skopeo/blob/main/install.md"
                 ;;
+            "docker")
+                error "To install Docker follow instructions here: https://docs.docker.com/engine/install/"
+                ;;
+            "jq")
+                error "To install jq follow instructions here: https://jqlang.github.io/jq/download/"
+                ;;
             esac
 
             exit 1
@@ -37,4 +43,4 @@ function check_cli() {
 }
 
 # Check if the required CLIs are installed
-check_cli "curl" "python3" "git" "openssl" "az" "kustomize" "kubectl" "skopeo"
+check_cli "curl" "python3" "git" "openssl" "az" "docker" "kustomize" "kubectl" "skopeo" "jq"
