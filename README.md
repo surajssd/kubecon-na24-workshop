@@ -1,3 +1,5 @@
+## Prerequisites
+
 Make a copy of the sample env file and modify it as needed:
 
 ```bash
@@ -10,80 +12,146 @@ Source the env var file:
 source .env
 ```
 
-Install AKS
+## Infrastructure Deployment
+
+Deploy Kubernetes using Azure Kubernetes Service:
 
 ```bash
 ./deploy-aks.sh
 ```
 
-Install KBS
+Install Key Broker Service (KBS):
 
 ```bash
 ./deploy-kbs.sh
 ```
 
-Install CAA
+Install Cloud API Adaptor (CAA) a.k.a. peer pods:
 
 ```bash
 ./deploy-caa.sh
 ```
 
-Generate a key and upload to KBS
+## Demo 1: Secure Key Release
+
+### Step 1.1: Key Management
+
+Generate a key:
 
 ```bash
-export KEY_ID="/reponame/workload_key/key.bin"
 export KEY_FILE="artifacts/keyfile"
 echo "this is important security file $RANDOM-$RANDOM" > $KEY_FILE
 cat $KEY_FILE
+```
 
+Upload the key to KBS:
+
+```bash
+export KEY_ID="/reponame/workload_key/key.bin"
 ./upload-key-to-kbs.sh $KEY_FILE $KEY_ID
 ```
 
+### Step 1.2: Application Deployment
+
 Start a basic application
 
-```bash
+```yaml
 cat <<EOF | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: nginx
+  name: ubuntu
   namespace: default
 spec:
   selector:
     matchLabels:
-      app: nginx
+      app: ubuntu
   replicas: 1
   template:
     metadata:
       labels:
-        app: nginx
+        app: ubuntu
     spec:
       runtimeClassName: kata-remote
       containers:
-      - name: nginx
-        image: nginx
-        ports:
-        - containerPort: 80
+      - name: ubuntu
+        image: quay.io/surajd/kubecon-na-2024-workshop
+        command:
+        - /bin/sleep
+        - infinity
         imagePullPolicy: Always
 EOF
 ```
 
-Now compare the key file coming from KBS and the one available locally:
+Wait for the pod to come up:
 
 ```bash
-kubectl -n default get pods
-kubectl -n default exec -it $(kubectl -n default get pods -l app=nginx -o name) -- curl http://127.0.0.1:8006/cdh/resource/reponame/workload_key/key.bin
+kubectl -n default get pods -l app=ubuntu -w
+```
+
+Hit <kbd>Ctrl</kbd> + <kbd>C</kbd> to stop when the pod is in `Running` state.
+
+### Step 1.3: Perform Secure Key Release
+
+Perform a secure key release:
+
+```bash
+kubectl -n default exec -it $(kubectl -n default get pods -l app=ubuntu -o name) -- curl http://127.0.0.1:8006/cdh/resource/reponame/workload_key/key.bin
+```
+
+Compare the key released from KBS with the key file we have locally:
+
+```bash
 cat $KEY_FILE
 ```
 
-## Encrypted Container Image
+### Step 1.4: Verify from KBS
 
 ```bash
+./kbs-logs.sh
+```
+
+### Step 1.5: Clean Up
+
+Delete the deployment:
+
+```bash
+kubectl -n default delete deployment ubuntu
+```
+
+## Demo 2: Encrypted Container Image
+
+### Step 2.1: Encrypt Container Image
+
+Encrypt the container image $SOURCE_IMAGE and upload it to the container registry:
+
+```bash
+# TODO: Add a setup to create a new ACR deployment.
 ./encrypt-container-image.sh
+```
+
+Verify the container image is encrypted, by pulling it in a pristine environment:
+
+```bash
+docker run --privileged --rm --name dind -d docker:stable-dind
+docker exec -it dind /bin/ash -c "docker pull $DESTINATION_IMAGE"
+```
+
+Use skopeo to inspect the image:
+
+```bash
+skopeo inspect --raw "docker://${DESTINATION_IMAGE}" | jq -r '.layers[0].annotations."org.opencontainers.image.enc.keys.provider.attestation-agent"' | base64 -d | jq
+```
+
+### Step 2.2: Upload the key to KBS
+
+```bash
 ./upload-key-to-kbs.sh $ENCRYPTION_KEY_FILE $ENCRYPTION_KEY_ID
 ```
 
-```bash
+### Step 2.3: Deploy Encrypted Container Image
+
+```yaml
 cat <<EOF | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
@@ -108,6 +176,10 @@ spec:
         - containerPort: 80
         imagePullPolicy: Always
 EOF
+```
+
+```bash
+kubectl -n default get pods -l app=nginx-encrypted -w
 ```
 
 ```bash
