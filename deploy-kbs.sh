@@ -18,8 +18,8 @@ KBS_CODE="${ARTIFACTS_DIR}/trustee-${KBS_VERSION}"
 # Pull the KBS code base if it is not available
 if [ ! -d "${KBS_CODE}" ]; then
     pushd ${ARTIFACTS_DIR}
-    curl -LO "https://github.com/confidential-containers/trustee/archive/refs/tags/v${KBS_VERSION}.tar.gz"
-    tar -xzf "v${KBS_VERSION}.tar.gz"
+    curl -LO "https://github.com/confidential-containers/trustee/archive/${KBS_VERSION}.tar.gz"
+    tar -xzf "${KBS_VERSION}.tar.gz"
     popd
 fi
 
@@ -32,13 +32,13 @@ openssl pkey -in kbs.key -pubout -out kbs.pem
 popd
 
 export DEPLOYMENT_DIR=nodeport
-cat <<EOF >$DEPLOYMENT_DIR/kustomization.yaml
+cat <<EOF >$DEPLOYMENT_DIR/x86_64/kustomization.yaml
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 namespace: coco-tenant
 
 resources:
-- ../base
+- ../../base/
 
 patches:
 - path: patch.yaml
@@ -48,5 +48,5 @@ patches:
     name: kbs
 EOF
 
-kustomize build $DEPLOYMENT_DIR | kubectl apply -f -
+kustomize build $DEPLOYMENT_DIR/x86_64 | kubectl apply -f -
 info "KBS deployed successfully!"
