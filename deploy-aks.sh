@@ -16,8 +16,7 @@ fi
 : "${AKS_WORKER_NODE_SIZE:?Environment variable must be set}"
 : "${AKS_WORKER_USER_NAME:?Environment variable must be set}"
 : "${ARTIFACTS_DIR:?Environment variable must be set}"
-
-SSH_KEY="${SSH_KEY:-${ARTIFACTS_DIR}/ssh.pub}"
+: "${SSH_KEY:?Environment variable must be set}"
 
 # If SSH_KEY is not set, generate a new SSH key
 if [ -n "${SSH_KEY:-}" ]; then
