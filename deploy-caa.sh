@@ -20,6 +20,7 @@ fi
 : "${CAA_VERSION:?Environment variable must be set}"
 : "${CAA_TAG:?Environment variable must be set}"
 : "${COCO_OPERATOR_VERSION:?Environment variable must be set}"
+: "${AZURE_IMAGE_ID:?Environment variable must be set}"
 
 SSH_KEY="${SSH_KEY:-${ARTIFACTS_DIR}/ssh.pub}"
 CAA_CODE="${ARTIFACTS_DIR}/cloud-api-adaptor-${CAA_VERSION}"
@@ -27,8 +28,6 @@ CAA_CODE="${ARTIFACTS_DIR}/cloud-api-adaptor-${CAA_VERSION}"
 DISABLECVM="false"
 AZURE_SUBSCRIPTION_ID=$(az account show --query id --output tsv)
 AKS_RG="${AZURE_RESOURCE_GROUP}-aks"
-
-AZURE_IMAGE_ID="/CommunityGalleries/cocopodvm-d0e4f35f-5530-4b9c-8596-112487cdea85/Images/podvm_image0/Versions/${CAA_VERSION}"
 
 USER_ASSIGNED_CLIENT_ID="$(az identity show \
     --resource-group "${AZURE_RESOURCE_GROUP}" \
