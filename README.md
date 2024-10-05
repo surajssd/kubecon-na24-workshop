@@ -86,10 +86,9 @@ EOF
 Wait for the pod to come up:
 
 ```bash
-kubectl -n default get pods -l app=ubuntu -w
+kubectl -n default wait --for=condition=Ready pod -l app=ubuntu --timeout=300s
+kubectl -n default get pods -l app=ubuntu
 ```
-
-Hit <kbd>Ctrl</kbd> + <kbd>C</kbd> to stop when the pod is in `Running` state.
 
 ### Step 1.3: Perform Secure Key Release
 
@@ -167,6 +166,8 @@ spec:
     metadata:
       labels:
         app: nginx-encrypted
+      annotations:
+        io.containerd.cri.runtime-handler: kata-remote
     spec:
       runtimeClassName: kata-remote
       containers:
@@ -177,11 +178,71 @@ spec:
         imagePullPolicy: Always
 EOF
 ```
+Wait for the pod to come up:
 
 ```bash
-kubectl -n default get pods -l app=nginx-encrypted -w
+kubectl -n default wait --for=condition=Ready pod -l app=nginx-encrypted --timeout=300s
+kubectl -n default get pods -l app=nginx-encrypted
 ```
+
+### Step 2.4: Verify Nginx in Encrypted Container Image is running
 
 ```bash
 kubectl -n default exec -it $(kubectl -n default get pods -l app=nginx-encrypted -o name) -- curl localhost
+```
+
+### Step 2.5: Verify from KBS
+
+```bash
+./kbs-logs.sh
+```
+
+### Step 2.6: Clean Up
+
+Delete the deployment:
+
+```bash
+kubectl -n default delete deployment nginx-encrypted
+```
+
+
+## Troubleshooting
+
+### Cloud API Adaptor (CAA) Logs
+
+```bash
+./caa-logs.sh
+```
+
+### Key Broker Service (KBS) Logs
+
+```bash
+./kbs-logs.sh
+```
+
+### Find region with Confidential VM capacity
+
+```bash
+./find-region-machine-map.sh
+```
+
+### Get access to the Worker Node
+
+```bash
+./node-debugger.sh
+```
+
+### Get access to the Confidential VM
+
+Get into the debugger pod:
+
+```bash
+./node-debugger.sh
+```
+
+Once inside run:
+
+```bash
+# TODO: Figure out an easier way to get the peer-pod VM IP
+ssh peerpod@<VM IP>
 ```
