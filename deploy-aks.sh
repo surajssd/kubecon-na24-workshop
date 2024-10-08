@@ -37,6 +37,18 @@ info "Creating Resource Group ${AZURE_RESOURCE_GROUP} in region ${AZURE_REGION} 
 az group create --name "${AZURE_RESOURCE_GROUP}" \
     --location "${AZURE_REGION}"
 
+info "Creating Azure Container Registry: ${AZURE_ACR_NAME} ..."
+az acr create \
+    --name "${AZURE_ACR_NAME}" \
+    --resource-group "${AZURE_RESOURCE_GROUP}" \
+    --sku Standard
+
+az acr update --name "${AZURE_ACR_NAME}" \
+    --anonymous-pull-enabled true
+
+info "Logging into Azure Container Registry: ${AZURE_ACR_NAME} ..."
+az acr login --name "${AZURE_ACR_NAME}"
+
 # Create AKS only if it does not exists
 if ! az aks show --resource-group "${AZURE_RESOURCE_GROUP}" --name "${CLUSTER_NAME}" >/dev/null 2>&1; then
     info "Creating AKS cluster: ${CLUSTER_NAME} ..."

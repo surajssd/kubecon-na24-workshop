@@ -125,7 +125,6 @@ kubectl -n default delete deployment ubuntu
 Encrypt the container image $SOURCE_IMAGE and upload it to the container registry:
 
 ```bash
-# TODO: Add a setup to create a new ACR deployment.
 ./encrypt-container-image.sh
 ```
 
