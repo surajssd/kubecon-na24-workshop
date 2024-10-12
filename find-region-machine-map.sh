@@ -9,6 +9,7 @@ if [ "${DEBUG:-false}" = "true" ]; then
 fi
 
 # These regions have been chosen because this is where the vm images are available.
+# TODO: Replicate the image to all the regions we have quota in.
 locations=("eastus" "eastus2" "northeurope" "westeurope")
 
 # AMD SEV SNP machine types: https://learn.microsoft.com/en-us/azure/virtual-machines/sizes/general-purpose/dcasv5-series

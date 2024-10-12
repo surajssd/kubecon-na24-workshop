@@ -3,6 +3,8 @@
 set -euo pipefail
 source utility.sh
 
+# TODO: Create a user specific RBAC
+
 # Check if the DEBUG env var is set to true
 if [ "${DEBUG:-false}" = "true" ]; then
     set -x
