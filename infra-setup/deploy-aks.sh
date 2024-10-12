@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
-source utility.sh
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+source "${SCRIPT_DIR}/../util/utility.sh"
 
 # TODO: Create a user specific RBAC
 

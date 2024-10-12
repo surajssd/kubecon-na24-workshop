@@ -1,56 +1,28 @@
 #!/usr/bin/env bash
 
 set -euo pipefail
-source utility.sh
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+source "${SCRIPT_DIR}/../util/utility.sh"
 
 # Check if the DEBUG env var is set to true
 if [ "${DEBUG:-false}" = "true" ]; then
     set -x
 fi
 
-POD_NAME="debugger"
+export POD_NAME="debugger"
+
+info "Deleting existing ${POD_NAME} pod if it exists ..."
 kubectl -n default delete pod ${POD_NAME} --ignore-not-found
 
 NODE_NAME=$(kubectl get nodes -o name)
-NODE_NAME=${NODE_NAME#node/}
+export NODE_NAME=${NODE_NAME#node/}
 
-cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: Pod
-metadata:
-  name: ${POD_NAME}
-  namespace: default
-spec:
-  containers:
-  - command:
-    - sleep
-    - infinity
-    image: ubuntu
-    imagePullPolicy: Always
-    name: debugger
-    volumeMounts:
-    - mountPath: /host
-      name: host-root
-  dnsPolicy: ClusterFirst
-  enableServiceLinks: true
-  hostIPC: true
-  hostNetwork: true
-  hostPID: true
-  nodeName: ${NODE_NAME}
-  preemptionPolicy: PreemptLowerPriority
-  priority: 0
-  restartPolicy: Never
-  schedulerName: default-scheduler
-  tolerations:
-  - operator: Exists
-  volumes:
-  - hostPath:
-      path: /
-      type: ""
-    name: host-root
-EOF
+info "Creating ${POD_NAME} pod on node ${NODE_NAME} ..."
+envsubst <"${SCRIPT_DIR}/node-debugger.yaml" | kubectl apply -f -
 
 # Wait for the pod to be ready
+info "Waiting for ${POD_NAME} pod to be ready ..."
 kubectl -n default wait --for=condition=Ready pod/debugger --timeout=300s
 
 SSH_PRIVATE_KEY="${SSH_KEY%.pub}"

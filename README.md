@@ -17,19 +17,19 @@ source .env
 Deploy Kubernetes using Azure Kubernetes Service:
 
 ```bash
-./deploy-aks.sh
+./infra-setup/deploy-aks.sh
 ```
 
 Install Key Broker Service (KBS):
 
 ```bash
-./deploy-kbs.sh
+./infra-setup/deploy-kbs.sh
 ```
 
 Install Cloud API Adaptor (CAA) a.k.a. peer pods:
 
 ```bash
-./deploy-caa.sh
+./infra-setup/deploy-caa.sh
 ```
 
 ## Demo 1: Secure Key Release
@@ -39,7 +39,7 @@ Install Cloud API Adaptor (CAA) a.k.a. peer pods:
 Generate a key:
 
 ```bash
-export KEY_FILE="artifacts/keyfile"
+export KEY_FILE="$(pwd)/artifacts/keyfile"
 echo "this is important security file $RANDOM-$RANDOM" > $KEY_FILE
 cat $KEY_FILE
 ```
@@ -48,39 +48,21 @@ Upload the key to KBS:
 
 ```bash
 export KEY_ID="/reponame/workload_key/key.bin"
-./upload-key-to-kbs.sh $KEY_FILE $KEY_ID
+./demos/upload-key-to-kbs.sh $KEY_FILE $KEY_ID
 ```
 
 ### Step 1.2: Application Deployment
 
-Start a basic application
+Look at the application deployment configuration:
+
+```bash
+cat demos/demo1/skr.yaml
+```
+
+Start a basic application:
 
 ```yaml
-cat <<EOF | kubectl apply -f -
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: ubuntu
-  namespace: default
-spec:
-  selector:
-    matchLabels:
-      app: ubuntu
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: ubuntu
-    spec:
-      runtimeClassName: kata-remote
-      containers:
-      - name: ubuntu
-        image: quay.io/surajd/kubecon-na-2024-workshop
-        command:
-        - /bin/sleep
-        - infinity
-        imagePullPolicy: Always
-EOF
+kubectl apply -f demos/demo1/skr.yaml
 ```
 
 Wait for the pod to come up:
@@ -107,7 +89,7 @@ cat $KEY_FILE
 ### Step 1.4: Verify from KBS
 
 ```bash
-./kbs-logs.sh
+./debug/kbs-logs.sh
 ```
 
 ### Step 1.5: Clean Up
@@ -125,7 +107,7 @@ kubectl -n default delete deployment ubuntu
 Encrypt the container image $SOURCE_IMAGE and upload it to the container registry:
 
 ```bash
-./encrypt-container-image.sh
+./demos/demo2/encrypt-container-image.sh
 ```
 
 Verify the container image is encrypted, by pulling it in a pristine environment:
@@ -144,39 +126,23 @@ skopeo inspect --raw "docker://${DESTINATION_IMAGE}" | jq -r '.layers[0].annotat
 ### Step 2.2: Upload the key to KBS
 
 ```bash
-./upload-key-to-kbs.sh $ENCRYPTION_KEY_FILE $ENCRYPTION_KEY_ID
+./demos/upload-key-to-kbs.sh $ENCRYPTION_KEY_FILE $ENCRYPTION_KEY_ID
 ```
 
 ### Step 2.3: Deploy Encrypted Container Image
 
-```yaml
-cat <<EOF | kubectl apply -f -
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-encrypted
-  namespace: default
-spec:
-  selector:
-    matchLabels:
-      app: nginx-encrypted
-  replicas: 1
-  template:
-    metadata:
-      labels:
-        app: nginx-encrypted
-      annotations:
-        io.containerd.cri.runtime-handler: kata-remote
-    spec:
-      runtimeClassName: kata-remote
-      containers:
-      - name: nginx
-        image: ${DESTINATION_IMAGE}
-        ports:
-        - containerPort: 80
-        imagePullPolicy: Always
-EOF
+Look at the encrypted application configuration:
+
+```bash
+cat demos/demo2/encrypted-app.yaml
 ```
+
+Deploy the encrypted application:
+
+```bash
+envsubst < demos/demo2/encrypted-app.yaml | kubectl apply -f -
+```
+
 Wait for the pod to come up:
 
 ```bash
@@ -193,7 +159,7 @@ kubectl -n default exec -it $(kubectl -n default get pods -l app=nginx-encrypted
 ### Step 2.5: Verify from KBS
 
 ```bash
-./kbs-logs.sh
+./debug/kbs-logs.sh
 ```
 
 ### Step 2.6: Clean Up
@@ -210,25 +176,25 @@ kubectl -n default delete deployment nginx-encrypted
 ### Cloud API Adaptor (CAA) Logs
 
 ```bash
-./caa-logs.sh
+./debug/caa-logs.sh
 ```
 
 ### Key Broker Service (KBS) Logs
 
 ```bash
-./kbs-logs.sh
+./debug/kbs-logs.sh
 ```
 
 ### Find region with Confidential VM capacity
 
 ```bash
-./find-region-machine-map.sh
+./debug/find-region-machine-map.sh
 ```
 
 ### Get access to the Worker Node
 
 ```bash
-./node-debugger.sh
+./debug/node-debugger.sh
 ```
 
 ### Get access to the Confidential VM
@@ -236,7 +202,7 @@ kubectl -n default delete deployment nginx-encrypted
 Get into the debugger pod:
 
 ```bash
-./node-debugger.sh
+./debug/node-debugger.sh
 ```
 
 Once inside run:

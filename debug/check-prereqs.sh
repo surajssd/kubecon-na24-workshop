@@ -1,7 +1,8 @@
 #!/usr/bin/env bash
-
 set -euo pipefail
-source utility.sh
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" &>/dev/null && pwd)"
+source "${SCRIPT_DIR}/../util/utility.sh"
 
 # Check if the DEBUG env var is set to true
 if [ "${DEBUG:-false}" = "true" ]; then

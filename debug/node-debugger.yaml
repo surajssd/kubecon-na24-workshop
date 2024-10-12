@@ -1,0 +1,33 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: ${POD_NAME}
+  namespace: default
+spec:
+  containers:
+  - command:
+    - sleep
+    - infinity
+    image: ubuntu
+    imagePullPolicy: Always
+    name: debugger
+    volumeMounts:
+    - mountPath: /host
+      name: host-root
+  dnsPolicy: ClusterFirst
+  enableServiceLinks: true
+  hostIPC: true
+  hostNetwork: true
+  hostPID: true
+  nodeName: ${NODE_NAME}
+  preemptionPolicy: PreemptLowerPriority
+  priority: 0
+  restartPolicy: Never
+  schedulerName: default-scheduler
+  tolerations:
+  - operator: Exists
+  volumes:
+  - hostPath:
+      path: /
+      type: ""
+    name: host-root

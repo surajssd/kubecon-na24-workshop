@@ -1,0 +1,24 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: nginx-encrypted
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: nginx-encrypted
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: nginx-encrypted
+      annotations:
+        io.containerd.cri.runtime-handler: kata-remote
+    spec:
+      runtimeClassName: kata-remote
+      containers:
+      - name: nginx
+        image: ${DESTINATION_IMAGE}
+        ports:
+        - containerPort: 80
+        imagePullPolicy: Always
