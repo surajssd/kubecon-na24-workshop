@@ -170,6 +170,62 @@ Delete the deployment:
 kubectl -n default delete deployment nginx-encrypted
 ```
 
+## Demo 3: Policy
+### Step 3.1: Install/Verify extension
+```bash
+az confcom
+```
+
+### Step 3.2: Create a deployment with all rules allowed policy
+Generate policy for deployment
+```bash
+az confcom katapolicygen --yaml "demos/demo3/policy-app.yaml" -p "demos/demo3/allow-all.rego"
+```
+
+Start the application
+```bash
+kubectl apply -f demos/demo3/policy-app.yaml
+```
+
+Wait for the pod to come up:
+```bash
+kubectl -n default wait --for=condition=Ready pod -l app=ubuntu --timeout=300s
+kubectl -n default get pods -l app=ubuntu
+```
+
+Verify ```exec``` works
+```bash
+kubectl exec -it $(kubectl -n default get pods -l app=ubuntu -o name) -- /bin/sh
+```
+
+### Step 3.3: Redeploy with all rules allowed except exec policy
+Regenerate policy with new rules
+```bash
+az confcom katapolicygen --yaml "demos/demo3/policy-app.yaml" -p "demos/demo3/allow-all-except-exec-process.rego"
+```
+
+Apply the new deployment
+```bash
+kubectl apply -f demos/demo3/policy-app.yaml
+```
+
+Wait for the pod to come up:
+```bash
+kubectl -n default wait --for=condition=Ready pod -l app=ubuntu --timeout=300s
+kubectl -n default get pods -l app=ubuntu
+```
+
+Verify ```exec``` is blocked
+```bash
+kubectl exec -it $(kubectl -n default get pods -l app=ubuntu -o name) -- /bin/sh
+```
+
+### Step 3.5: Clean up
+Delete the deployment:
+
+```bash
+kubectl -n default delete deployment ubuntu
+```
 
 ## Troubleshooting
 
