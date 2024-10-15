@@ -1,0 +1,27 @@
+# This is a sample deployment file that uses Kata Containers's peer pods as the
+# runtime class called kata-remote for the pod. This example is used to showcase
+# remote key release.
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ubuntu
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: ubuntu
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ubuntu
+    spec:
+      runtimeClassName: kata-remote
+      containers:
+        - name: ubuntu
+          image: quay.io/surajd/kubecon-na-2024-workshop
+          command:
+            - /bin/sleep
+            - infinity
+          imagePullPolicy: Always
