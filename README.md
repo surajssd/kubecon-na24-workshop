@@ -113,8 +113,8 @@ Encrypt the container image $SOURCE_IMAGE and upload it to the container registr
 Verify the container image is encrypted, by pulling it in a pristine environment:
 
 ```bash
-docker run --privileged --rm --name dind -d docker:stable-dind
-docker exec -it dind /bin/ash -c "docker pull $DESTINATION_IMAGE"
+docker run --privileged --rm --name dind -d docker:dind
+docker exec -it dind /bin/sh -c "docker pull $DESTINATION_IMAGE"
 ```
 
 Use skopeo to inspect the image:
