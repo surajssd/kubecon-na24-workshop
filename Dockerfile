@@ -44,3 +44,6 @@ RUN apt update && \
     curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash && mv ./kustomize /usr/bin && \
     curl -sL https://aka.ms/InstallAzureCLIDeb | bash && \
     ln -s /usr/bin/batcat /usr/local/sbin/cat
+
+COPY entrypoint.sh /entrypoint.sh
+ENTRYPOINT [ "/entrypoint.sh" ]
