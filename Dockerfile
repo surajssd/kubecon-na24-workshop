@@ -9,9 +9,22 @@ RUN apt update && \
     apt update && \
     apt-get install -y docker-ce-cli
 
+FROM ubuntu:22.04 AS agentpolicy
+
+RUN apt update && \
+    apt install -y xz-utils curl
+
+WORKDIR /kata
+
+# Download the 3.9.0 version of agent policy
+RUN curl -LO https://github.com/kata-containers/kata-containers/releases/download/3.9.0/kata-static-3.9.0-amd64.tar.xz && \
+    tar -xJf kata-static-3.9.0-amd64.tar.xz ./opt/kata/bin/genpolicy ./opt/kata/share/defaults/kata-containers/rules.rego ./opt/kata/share/defaults/kata-containers/genpolicy-settings.json
+
 FROM ubuntu:22.04
 
 COPY --from=docker /usr/bin/docker /usr/bin/docker
+COPY --from=agentpolicy /kata/opt/kata/bin/genpolicy /usr/bin/genpolicy
+COPY --from=agentpolicy /kata/opt/kata/share/defaults/kata-containers/* /opt/kata/share/defaults/kata-containers/
 
 RUN apt update && \
     apt install -y \
