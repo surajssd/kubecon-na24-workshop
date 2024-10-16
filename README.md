@@ -204,7 +204,7 @@ Generate policy for the deployment:
 
 ```bash
 genpolicy --raw-out \
-    --json-settings-path /opt/kata/share/defaults/kata-containers/genpolicy-settings.json \
+    --json-settings-path demos/demo3/genpolicy-settings.json \
     --yaml-file demos/demo3/policy-app.yaml \
     --rego-rules-path demos/demo3/allow-all.rego
 ```
@@ -258,7 +258,7 @@ Regenerate policy with new rules:
 
 ```bash
 genpolicy --raw-out \
-    --json-settings-path /opt/kata/share/defaults/kata-containers/genpolicy-settings.json \
+    --json-settings-path demos/demo3/genpolicy-settings.json \
     --yaml-file demos/demo3/policy-app.yaml \
     --rego-rules-path demos/demo3/disallow-exec.rego
 ```
