@@ -14,6 +14,7 @@ docker-run:
 		-e USER_NAME=$(shell id -un) \
 		--workdir /kubecon-na24-workshop \
 		$(DOCKER_IMAGE)
+	sleep 5
 	docker exec -it kubecon-na24-workshop su $(shell id -un)
 
 .PHONY: clean

@@ -40,14 +40,14 @@ Generate a key:
 
 ```bash
 export KEY_FILE="$(pwd)/artifacts/keyfile"
-echo "this is important security file $RANDOM-$RANDOM" > $KEY_FILE
+echo "KubeconNA-2024-@SLC-$RANDOM-$(date '+%Y%m%b%d%H%M%S')" > $KEY_FILE
 cat $KEY_FILE
 ```
 
 Upload the key to KBS:
 
 ```bash
-export KEY_ID="reponame/workload_key/key.bin"
+export KEY_ID="kubecon_na24/coco_demo/key.bin"
 ./demos/upload-key-to-kbs.sh $KEY_FILE $KEY_ID
 ```
 
@@ -106,7 +106,11 @@ kubectl -n default delete deployment ubuntu
 
 ### Step 2.1: Encrypt Container Image
 
-Encrypt the container image $SOURCE_IMAGE and upload it to the container registry:
+Encrypt the container image `$SOURCE_IMAGE` and upload it to the container registry:
+
+```bash
+echo $SOURCE_IMAGE
+```
 
 ```bash
 ./demos/demo2/encrypt-container-image.sh
@@ -115,7 +119,7 @@ Encrypt the container image $SOURCE_IMAGE and upload it to the container registr
 Verify the container image is encrypted, by pulling it in a pristine environment:
 
 ```bash
-docker run --privileged --rm --name dind -d docker:dind
+docker run --privileged --rm --name dind -d docker:dind && sleep 5
 docker exec -it dind /bin/sh -c "docker pull $DESTINATION_IMAGE"
 ```
 
@@ -139,6 +143,10 @@ Look at the encrypted application configuration:
 
 ```bash
 cat demos/demo2/encrypted-app.yaml
+```
+
+```bash
+echo $DESTINATION_IMAGE
 ```
 
 Deploy the encrypted application:
@@ -186,7 +194,7 @@ This policy has everything allowed:
 cat demos/demo3/allow-all.rego
 ```
 
-Sample application similar to demo 1:
+Sample application:
 
 ```bash
 cat demos/demo3/policy-app.yaml
@@ -195,7 +203,7 @@ cat demos/demo3/policy-app.yaml
 Generate policy for the deployment:
 
 ```bash
-genpolicy \
+genpolicy --raw-out \
     --json-settings-path /opt/kata/share/defaults/kata-containers/genpolicy-settings.json \
     --yaml-file demos/demo3/policy-app.yaml \
     --rego-rules-path demos/demo3/allow-all.rego
@@ -226,6 +234,12 @@ Verify that you can `exec` into the pod:
 kubectl exec -it $(kubectl -n default get pods -l app=nginx -o name) -- curl localhost
 ```
 
+Delete the deployment:
+
+```bash
+kubectl -n default delete deployment nginx
+```
+
 ### Scenario 3.2: Disallow `exec` Policy
 
 Let's look at the policy that disallows `exec`:
@@ -243,7 +257,7 @@ diff demos/demo3/allow-all.rego demos/demo3/disallow-exec.rego
 Regenerate policy with new rules:
 
 ```bash
-genpolicy \
+genpolicy --raw-out \
     --json-settings-path /opt/kata/share/defaults/kata-containers/genpolicy-settings.json \
     --yaml-file demos/demo3/policy-app.yaml \
     --rego-rules-path demos/demo3/disallow-exec.rego
@@ -274,12 +288,10 @@ Verify if you can `exec` into the pod:
 kubectl exec -it $(kubectl -n default get pods -l app=nginx -o name) -- curl localhost
 ```
 
-### Step 3.3: Clean up
-
 Delete the deployment:
 
 ```bash
-kubectl -n default delete deployment ubuntu
+kubectl -n default delete deployment nginx
 ```
 
 ## Troubleshooting

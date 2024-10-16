@@ -31,6 +31,7 @@ fi
 
 info "Running the container image encryptor application: ${COCO_KEY_PROVIDER}"
 CONTAINER_NAME="coco-key-provider"
+docker rm -f "${CONTAINER_NAME}" || true
 docker run --rm -d --name "${CONTAINER_NAME}" "${COCO_KEY_PROVIDER}" sleep infinity
 
 info "Ensuring container image encryptor application can push to the container registry"
@@ -40,7 +41,7 @@ docker cp $HOME/.docker/config.json "${CONTAINER_NAME}":/root/.docker/config.jso
 info "Encrypting image ${SOURCE_IMAGE} using key ${ENCRYPTION_KEY_FILE} and pushing encrypted image ${DESTINATION_IMAGE} ..."
 docker exec -it "${CONTAINER_NAME}" /encrypt.sh \
     -k "$(base64 <${ENCRYPTION_KEY_FILE})" \
-    -i "kbs://${ENCRYPTION_KEY_ID}" \
+    -i "kbs:///${ENCRYPTION_KEY_ID}" \
     -s "docker://${SOURCE_IMAGE}" \
     -d "docker://${DESTINATION_IMAGE}"
 
