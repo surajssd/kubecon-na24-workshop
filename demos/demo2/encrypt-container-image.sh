@@ -29,18 +29,20 @@ if [ ! -f "${ENCRYPTION_KEY_FILE}" ]; then
     head -c 32 /dev/urandom | openssl enc >"$ENCRYPTION_KEY_FILE"
 fi
 
-WORK_DIR="$(mktemp -d)"
+info "Running the container image encryptor application: ${COCO_KEY_PROVIDER}"
+CONTAINER_NAME="coco-key-provider"
+docker run --rm -d --name "${CONTAINER_NAME}" "${COCO_KEY_PROVIDER}" sleep infinity
 
-info "Encrypting image ${SOURCE_IMAGE} using key ${ENCRYPTION_KEY_FILE} ..."
-docker run -v "${WORK_DIR}:/output" "${COCO_KEY_PROVIDER}" /encrypt.sh \
+info "Ensuring container image encryptor application can push to the container registry"
+docker exec -it "${CONTAINER_NAME}" mkdir -p /root/.docker
+docker cp $HOME/.docker/config.json "${CONTAINER_NAME}":/root/.docker/config.json
+
+info "Encrypting image ${SOURCE_IMAGE} using key ${ENCRYPTION_KEY_FILE} and pushing encrypted image ${DESTINATION_IMAGE} ..."
+docker exec -it "${CONTAINER_NAME}" /encrypt.sh \
     -k "$(base64 <${ENCRYPTION_KEY_FILE})" \
     -i "kbs://${ENCRYPTION_KEY_ID}" \
     -s "docker://${SOURCE_IMAGE}" \
-    -d dir:/output
+    -d "docker://${DESTINATION_IMAGE}"
 
-info "Pushing encrypted image ${DESTINATION_IMAGE} ..."
-skopeo copy "dir:${WORK_DIR}" "docker://${DESTINATION_IMAGE}"
+docker stop "${CONTAINER_NAME}"
 info "Image encrypted and pushed to container registry successfully!"
-
-# Clean up the temporary directory
-rm -rf "${WORK_DIR}"
