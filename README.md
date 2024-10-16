@@ -47,7 +47,7 @@ cat $KEY_FILE
 Upload the key to KBS:
 
 ```bash
-export KEY_ID="/reponame/workload_key/key.bin"
+export KEY_ID="reponame/workload_key/key.bin"
 ./demos/upload-key-to-kbs.sh $KEY_FILE $KEY_ID
 ```
 
@@ -77,7 +77,9 @@ kubectl -n default get pods -l app=ubuntu
 Perform a secure key release:
 
 ```bash
-kubectl -n default exec -it $(kubectl -n default get pods -l app=ubuntu -o name) -- curl http://127.0.0.1:8006/cdh/resource/reponame/workload_key/key.bin
+kubectl -n default exec -it \
+    $(kubectl -n default get pods -l app=ubuntu -o name) -- \
+    curl http://127.0.0.1:8006/cdh/resource/$KEY_ID
 ```
 
 Compare the key released from KBS with the key file we have locally:
@@ -120,7 +122,9 @@ docker exec -it dind /bin/sh -c "docker pull $DESTINATION_IMAGE"
 Use skopeo to inspect the image:
 
 ```bash
-skopeo inspect --raw "docker://${DESTINATION_IMAGE}" | jq -r '.layers[0].annotations."org.opencontainers.image.enc.keys.provider.attestation-agent"' | base64 -d | jq
+skopeo inspect --raw "docker://${DESTINATION_IMAGE}" | \
+    jq -r '.layers[0].annotations."org.opencontainers.image.enc.keys.provider.attestation-agent"' \
+    | base64 -d | jq
 ```
 
 ### Step 2.2: Upload the key to KBS
@@ -153,7 +157,9 @@ kubectl -n default get pods -l app=nginx-encrypted
 ### Step 2.4: Verify Nginx in Encrypted Container Image is running
 
 ```bash
-kubectl -n default exec -it $(kubectl -n default get pods -l app=nginx-encrypted -o name) -- curl localhost
+kubectl -n default exec -it \
+    $(kubectl -n default get pods -l app=nginx-encrypted -o name) -- \
+    curl localhost
 ```
 
 ### Step 2.5: Verify from KBS
@@ -170,57 +176,106 @@ Delete the deployment:
 kubectl -n default delete deployment nginx-encrypted
 ```
 
-## Demo 3: Policy
-### Step 3.1: Install/Verify extension
+## Demo 3: Confidential Containers Policy
+
+### Scenario 3.1: Debug Policy
+
+This policy has everything allowed:
+
 ```bash
-az confcom
+cat demos/demo3/allow-all.rego
 ```
 
-### Step 3.2: Create a deployment with all rules allowed policy
-Generate policy for deployment
+Sample application similar to demo 1:
+
 ```bash
-az confcom katapolicygen --yaml "demos/demo3/policy-app.yaml" -p "demos/demo3/allow-all.rego"
+cat demos/demo3/policy-app.yaml
 ```
 
-Start the application
+Generate policy for the deployment:
+
 ```bash
-kubectl apply -f demos/demo3/policy-app.yaml
+genpolicy \
+    --json-settings-path /opt/kata/share/defaults/kata-containers/genpolicy-settings.json \
+    --yaml-file demos/demo3/policy-app.yaml \
+    --rego-rules-path demos/demo3/allow-all.rego
 ```
 
-Wait for the pod to come up:
+Look at the updated application configuration:
+
 ```bash
-kubectl -n default wait --for=condition=Ready pod -l app=ubuntu --timeout=300s
-kubectl -n default get pods -l app=ubuntu
+cat demos/demo3/policy-app.yaml
 ```
 
-Verify ```exec``` works
-```bash
-kubectl exec -it $(kubectl -n default get pods -l app=ubuntu -o name) -- /bin/sh
-```
+Start the application:
 
-### Step 3.3: Redeploy with all rules allowed except exec policy
-Regenerate policy with new rules
-```bash
-az confcom katapolicygen --yaml "demos/demo3/policy-app.yaml" -p "demos/demo3/allow-all-except-exec-process.rego"
-```
-
-Apply the new deployment
 ```bash
 kubectl apply -f demos/demo3/policy-app.yaml
 ```
 
 Wait for the pod to come up:
+
 ```bash
-kubectl -n default wait --for=condition=Ready pod -l app=ubuntu --timeout=300s
-kubectl -n default get pods -l app=ubuntu
+kubectl -n default wait --for=condition=Ready pod -l app=nginx --timeout=300s
+kubectl -n default get pods -l app=nginx
 ```
 
-Verify ```exec``` is blocked
+Verify that you can `exec` into the pod:
+
 ```bash
-kubectl exec -it $(kubectl -n default get pods -l app=ubuntu -o name) -- /bin/sh
+kubectl exec -it $(kubectl -n default get pods -l app=nginx -o name) -- curl localhost
 ```
 
-### Step 3.5: Clean up
+### Scenario 3.2: Disallow `exec` Policy
+
+Let's look at the policy that disallows `exec`:
+
+```bash
+cat demos/demo3/disallow-exec.rego
+```
+
+You can look at the difference between the allow-all and disallow-exec policies:
+
+```bash
+diff demos/demo3/allow-all.rego demos/demo3/disallow-exec.rego
+```
+
+Regenerate policy with new rules:
+
+```bash
+genpolicy \
+    --json-settings-path /opt/kata/share/defaults/kata-containers/genpolicy-settings.json \
+    --yaml-file demos/demo3/policy-app.yaml \
+    --rego-rules-path demos/demo3/disallow-exec.rego
+```
+
+Look at the updated application configuration:
+
+```bash
+cat demos/demo3/policy-app.yaml
+```
+
+Apply the new deployment:
+
+```bash
+kubectl apply -f demos/demo3/policy-app.yaml
+```
+
+Wait for the pod to come up:
+
+```bash
+kubectl -n default wait --for=condition=Ready pod -l app=nginx --timeout=300s
+kubectl -n default get pods -l app=nginx
+```
+
+Verify if you can `exec` into the pod:
+
+```bash
+kubectl exec -it $(kubectl -n default get pods -l app=nginx -o name) -- curl localhost
+```
+
+### Step 3.3: Clean up
+
 Delete the deployment:
 
 ```bash
