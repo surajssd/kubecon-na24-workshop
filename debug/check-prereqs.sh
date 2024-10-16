@@ -44,4 +44,15 @@ function check_cli() {
 }
 
 # Check if the required CLIs are installed
-check_cli "curl" "python3" "git" "openssl" "az" "docker" "kustomize" "kubectl" "skopeo" "jq"
+check_cli \
+    curl \
+    python3 \
+    git \
+    openssl \
+    make \
+    az \
+    docker \
+    kustomize \
+    kubectl \
+    skopeo \
+    jq

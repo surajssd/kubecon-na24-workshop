@@ -12,6 +12,7 @@ docker-push:
 docker-run:
 	docker run -it \
 		-v $(shell pwd):/kubecon-na24-workshop \
+		-v /var/run/docker.sock:/var/run/docker.sock \
 		--workdir /kubecon-na24-workshop \
 		$(DOCKER_IMAGE) bash
 
