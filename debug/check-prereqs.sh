@@ -36,6 +36,12 @@ function check_cli() {
             "jq")
                 error "To install jq follow instructions here: https://jqlang.github.io/jq/download/"
                 ;;
+            "envsubst")
+                error "To install envsubst on Ubuntu run: sudo apt-get install -y gettext-base"
+                ;;
+            "genpolicy")
+                error "To install genpolicy run: ./util/download-genpolicy.sh"
+                ;;
             esac
 
             exit 1
@@ -55,4 +61,6 @@ check_cli \
     kustomize \
     kubectl \
     skopeo \
-    jq
+    envsubst \
+    jq \
+    genpolicy
