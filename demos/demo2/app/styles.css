@@ -1,0 +1,10 @@
+body {
+    text-align: center;
+    background-color: #f0f0f0;
+}
+
+img {
+    max-width: 80%;
+    height: auto;
+    border: 2px solid #ccc;
+}

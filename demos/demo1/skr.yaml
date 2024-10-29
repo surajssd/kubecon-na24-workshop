@@ -19,7 +19,7 @@ spec:
       runtimeClassName: kata-remote
       containers:
       - name: ubuntu
-        image: ghcr.io/surajssd/kubecon-na24-workshop
+        image: ghcr.io/surajssd/kubecon-na24-workshop-base
         command:
         - /bin/sleep
         - infinity

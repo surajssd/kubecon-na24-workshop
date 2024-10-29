@@ -22,3 +22,17 @@ spec:
         ports:
         - containerPort: 80
         imagePullPolicy: Always
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: nginx-encrypted
+  namespace: default
+spec:
+  selector:
+    app: nginx-encrypted
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 80
+  type: LoadBalancer
