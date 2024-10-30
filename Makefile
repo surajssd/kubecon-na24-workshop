@@ -14,6 +14,7 @@ docker-run:
 		-e GROUP_ID=$(shell id -g) \
 		-e USER_NAME=$(shell id -un) \
 		--workdir /kubecon-na24-workshop-base \
+		--rm \
 		$(DOCKER_IMAGE)
 	sleep 5
 	docker exec -it kubecon-na24-workshop-base su $(shell id -un)
