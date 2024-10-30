@@ -13,7 +13,6 @@ docker-run:
 		-e USER_ID=$(shell id -u) \
 		-e GROUP_ID=$(shell id -g) \
 		-e USER_NAME=$(shell id -un) \
-		-p 8080:8080 \
 		--workdir /kubecon-na24-workshop-base \
 		$(DOCKER_IMAGE)
 	sleep 5
