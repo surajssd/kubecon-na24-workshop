@@ -61,7 +61,7 @@ cat demos/demo1/skr.yaml
 
 Start a basic application:
 
-```yaml
+```bash
 kubectl apply -f demos/demo1/skr.yaml
 ```
 
@@ -165,9 +165,9 @@ kubectl -n default get pods -l app=nginx-encrypted
 ### Step 2.4: Verify Nginx in Encrypted Container Image is running
 
 ```bash
-kubectl -n default exec -it \
-    $(kubectl -n default get pods -l app=nginx-encrypted -o name) -- \
-    curl localhost
+PUBLIC_IP=$(kubectl -n default get svc nginx-encrypted \
+    -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
+echo "http://${PUBLIC_IP}:80"
 ```
 
 ### Step 2.5: Verify from KBS
@@ -182,6 +182,7 @@ Delete the deployment:
 
 ```bash
 kubectl -n default delete deployment nginx-encrypted
+kubectl -n default delete svc nginx-encrypted
 ```
 
 ## Demo 3: Confidential Containers Policy
