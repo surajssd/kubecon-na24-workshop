@@ -37,11 +37,11 @@ jobs:
         # The format is <branch>-<commit hash>-<timestamp>.
         echo "image_tag=$(git rev-parse --abbrev-ref HEAD)-$(git rev-parse --short HEAD)-$(date '+%Y%m%d-%H%M%S')" >> $GITHUB_OUTPUT
 
-    - name: Extract metadata labels for image
-      id: meta
+    - name: Extract metadata labels for base image
+      id: meta-base
       uses: docker/metadata-action@v5
       with:
-        images: ${{ env.REGISTRY }}/surajssd/kubecon-na24-workshop
+        images: ${{ env.REGISTRY }}/surajssd/kubecon-na24-workshop-base
         tags: |
           type=raw,value=${{ steps.tag.outputs.image_tag }}
           type=raw,value=latest
@@ -51,5 +51,23 @@ jobs:
       with:
         file: Dockerfile
         push: true
-        tags: ${{ steps.meta.outputs.tags }}
-        labels: ${{ steps.meta.outputs.labels }}
+        tags: ${{ steps.meta-base.outputs.tags }}
+        labels: ${{ steps.meta-base.outputs.labels }}
+
+    - name: Extract metadata labels for demo 2 image
+      id: meta-demo2
+      uses: docker/metadata-action@v5
+      with:
+        images: ${{ env.REGISTRY }}/surajssd/kubecon-na24-workshop-demo2
+        tags: |
+          type=raw,value=${{ steps.tag.outputs.image_tag }}
+          type=raw,value=latest
+
+    - name: Demo 2 application image
+      uses: docker/build-push-action@v6
+      with:
+        file: demos/demo2/app/Dockerfile
+        context: demos/demo2/app
+        push: true
+        tags: ${{ steps.meta-demo2.outputs.tags }}
+        labels: ${{ steps.meta-demo2.outputs.labels }}
