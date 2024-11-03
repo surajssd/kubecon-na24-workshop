@@ -38,6 +38,7 @@ AZURE_SUBSCRIPTION_ID=$(az account show --query id --output tsv)
 AKS_RG="${AZURE_RESOURCE_GROUP}-aks"
 
 info "Creating Resource Group ${AZURE_RESOURCE_GROUP} in region ${AZURE_REGION} ..."
+# TODO: Failure scenario: Two different people create RG with the same name. See if the 2nd person sees failure with actionable message.
 az group create --name "${AZURE_RESOURCE_GROUP}" \
     --location "${AZURE_REGION}"
 
@@ -107,6 +108,7 @@ USER_ASSIGNED_CLIENT_ID="$(az identity show \
 
 MAX_RETRIES=20
 for i in $(seq 1 $MAX_RETRIES); do
+    # TODO: Instead of querying the service principal, which may need elevated permissions, maybe we can keep trying the role assignment.
     if az ad sp show \
         --id "${USER_ASSIGNED_CLIENT_ID}" >/dev/null 2>&1; then
         break

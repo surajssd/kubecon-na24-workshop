@@ -1,2 +1,3 @@
 artifacts
 .env
+infra-setup/admin/.admin-env
