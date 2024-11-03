@@ -1,0 +1,15 @@
+{
+  "Name": "Kubecon NA 2024 CoCo Workshop Role",
+  "IsCustom": true,
+  "Description": "Role for the Kubecon workshop participants",
+  "Actions": [
+    "Microsoft.Resources/subscriptions/resourceGroups/write"
+  ],
+  "NotActions": [
+    "Microsoft.Resources/subscriptions/resourceGroups/read",
+    "Microsoft.Resources/subscriptions/resourceGroups/delete"
+  ],
+  "AssignableScopes": [
+    "/subscriptions/520c5a55-55b9-4595-8556-188f4373859d"
+  ]
+}

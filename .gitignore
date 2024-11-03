@@ -1,3 +1,4 @@
 artifacts
 .env
 infra-setup/admin/.admin-env
+infra-setup/admin/emails.csv

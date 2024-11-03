@@ -1,0 +1,50 @@
+export AZURE_SUBSCRIPTION_ID=$(az account show --query id --output tsv)
+export GALLERY_NAME="caaubntcvmsGallery"
+export GALLERY_IMAGE_DEF_NAME="cc-image"
+
+az sig create \
+    --gallery-name "${GALLERY_NAME}" \
+    --resource-group "${AZURE_RESOURCE_GROUP}" \
+    --location "${AZURE_REGION}"
+
+az sig image-definition create \
+    --resource-group "${AZURE_RESOURCE_GROUP}" \
+    --gallery-name "${GALLERY_NAME}" \
+    --gallery-image-definition "${GALLERY_IMAGE_DEF_NAME}" \
+    --publisher GreatPublisher \
+    --offer GreatOffer \
+    --sku GreatSku \
+    --os-type "Linux" \
+    --os-state "Generalized" \
+    --hyper-v-generation "V2" \
+    --location "${AZURE_REGION}" \
+    --architecture "x64" \
+    --features SecurityType=ConfidentialVmSupported
+
+export PKR_VAR_resource_group="${AZURE_RESOURCE_GROUP}"
+export PKR_VAR_location="${AZURE_REGION}"
+export PKR_VAR_subscription_id="${AZURE_SUBSCRIPTION_ID}"
+export PKR_VAR_use_azure_cli_auth=true
+export PKR_VAR_az_gallery_name="${GALLERY_NAME}"
+export PKR_VAR_az_gallery_image_name="${GALLERY_IMAGE_DEF_NAME}"
+export PKR_VAR_az_gallery_image_version="0.0.2"
+export PKR_VAR_az_image_name="peer-pod-vmimage1"
+export PKR_VAR_offer=0001-com-ubuntu-confidential-vm-jammy
+export PKR_VAR_sku=22_04-lts-cvm
+
+export ATTESTER="az-snp-vtpm-attester,az-tdx-vtpm-attester"
+export LIBC=gnu
+export CLOUD_PROVIDER=azure
+export PODVM_DISTRO=ubuntu
+make image
+
+# Use the current steps to build VM and then push it to the community gallery.
+# See if I can do a PR to the upstream repo.
+
+# # https://portal.azure.com/#@cocoatmsftoutlook.onmicrosoft.com/resource/subscriptions/aeb2ddc0-3ddc-46fd-bd61-ebb849e5d483/resourceGroups/azure-caa-ci0/providers/Microsoft.Compute/galleries/podvm_gallery0/overview
+# # https://portal.azure.com/#@cocoatmsftoutlook.onmicrosoft.com/resource/subscriptions/aeb2ddc0-3ddc-46fd-bd61-ebb849e5d483/resourceGroups/azure-caa-ci0/providers/Microsoft.Compute/galleries/podvm_gallery0/images/podvm_image0/overview
+# AZURE_IMAGE_ID="/CommunityGalleries/cocopodvm-d0e4f35f-5530-4b9c-8596-112487cdea85/Images/podvm_image0/Versions/0.9.1"
+
+# # # https://portal.azure.com/#@cocoatmsftoutlook.onmicrosoft.com/resource/subscriptions/aeb2ddc0-3ddc-46fd-bd61-ebb849e5d483/resourceGroups/coco-images/providers/Microsoft.Compute/galleries/cocoimages/overview
+# # # https://portal.azure.com/#@cocoatmsftoutlook.onmicrosoft.com/resource/subscriptions/aeb2ddc0-3ddc-46fd-bd61-ebb849e5d483/resourceGroups/coco-images/providers/Microsoft.Compute/galleries/cocoimages/images/peerpod-podvm-ubuntu2204-cvm-snp/overview
+# # AZURE_IMAGE_ID="/CommunityGalleries/cococommunity-42d8482d-92cd-415b-b332-7648bd978eff/Images/peerpod-podvm-ubuntu2204-cvm-snp/Versions/${CAA_VERSION}"

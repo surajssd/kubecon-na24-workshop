@@ -1,0 +1,48 @@
+{
+    "if": {
+        "field": "type",
+        "equals": "Microsoft.Resources/subscriptions/resourceGroups"
+    },
+    "then": {
+        "effect": "deployIfNotExists",
+        "details": {
+            "type": "Microsoft.Authorization/roleAssignments",
+            "roleDefinitionIds": [
+                "/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7"
+            ],
+            "existenceCondition": {
+                "allOf": [
+                    {
+                        "field": "Microsoft.Authorization/roleAssignments/principalId",
+                        "equals": "[requestContext().principalId]"
+                    },
+                    {
+                        "field": "Microsoft.Authorization/roleAssignments/roleDefinitionId",
+                        "equals": "/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7"
+                    }
+                ]
+            },
+            "deployment": {
+                "properties": {
+                    "mode": "incremental",
+                    "template": {
+                        "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+                        "contentVersion": "1.0.0.0",
+                        "parameters": {},
+                        "resources": [
+                            {
+                                "type": "Microsoft.Authorization/roleAssignments",
+                                "apiVersion": "2020-04-01-preview",
+                                "name": "[guid(resourceGroup().id, 'OwnerAssignment')]",
+                                "properties": {
+                                    "roleDefinitionId": "/providers/Microsoft.Authorization/roleDefinitions/acdd72a7-3385-48ef-bd42-f606fba81ae7",
+                                    "principalId": "[requestContext().principalId]"
+                                }
+                            }
+                        ]
+                    }
+                }
+            }
+        }
+    }
+}
