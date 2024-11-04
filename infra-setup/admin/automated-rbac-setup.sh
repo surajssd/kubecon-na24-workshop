@@ -53,6 +53,7 @@ LOGIC_APP_IDENTITY=$(az logic workflow show \
   --name "${LOGIC_APP_NAME}" \
   --resource-group "${ADMIN_RESOURCE_GROUP}" \
   --query identity.principalId -o tsv)
+export LOGIC_APP_IDENTITY
 
 # Get the Logic App's callback URL
 info "Fetching the callback URL of the Logic App..."
