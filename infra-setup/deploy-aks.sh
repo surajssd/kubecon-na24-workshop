@@ -39,9 +39,11 @@ AKS_RG="${AZURE_RESOURCE_GROUP}-aks"
 
 info "Creating Resource Group ${AZURE_RESOURCE_GROUP} in region ${AZURE_REGION} ..."
 # TODO: Failure scenario: Two different people create RG with the same name. See if the 2nd person sees failure with actionable message.
+# If this fails the unique name error then update the file artifacts/azure-acr-name
 az group create --name "${AZURE_RESOURCE_GROUP}" \
     --location "${AZURE_REGION}"
 
+# If this fails the unique name error then update the file artifacts/azure-resource-group
 info "Creating Azure Container Registry: ${AZURE_ACR_NAME} ..."
 az acr create \
     --name "${AZURE_ACR_NAME}" \
