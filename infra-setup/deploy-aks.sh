@@ -22,6 +22,8 @@ fi
 : "${ARTIFACTS_DIR:?Environment variable must be set}"
 : "${SSH_KEY:?Environment variable must be set}"
 
+MAX_RETRIES=20
+
 # If SSH_KEY is not set, generate a new SSH key
 if [ -n "${SSH_KEY:-}" ]; then
     generate_ssh_key "${SSH_KEY}"
@@ -42,6 +44,14 @@ info "Creating Resource Group ${AZURE_RESOURCE_GROUP} in region ${AZURE_REGION} 
 # If this fails the unique name error then update the file artifacts/azure-acr-name
 az group create --name "${AZURE_RESOURCE_GROUP}" \
     --location "${AZURE_REGION}"
+
+for i in $(seq 1 $MAX_RETRIES); do
+    if az group show -g "${AZURE_RESOURCE_GROUP}" >/dev/null 2>&1; then
+        break
+    fi
+    info "Waiting for the resoucre group to have owner role assignment, retrying in $((2 ** (i - 1))) seconds..."
+    sleep $((2 ** (i - 1)))
+done
 
 # If this fails the unique name error then update the file artifacts/azure-resource-group
 info "Creating Azure Container Registry: ${AZURE_ACR_NAME} ..."
@@ -108,7 +118,6 @@ USER_ASSIGNED_CLIENT_ID="$(az identity show \
     --query 'clientId' \
     -otsv)"
 
-MAX_RETRIES=20
 for i in $(seq 1 $MAX_RETRIES); do
     # TODO: Instead of querying the service principal, which may need elevated permissions, maybe we can keep trying the role assignment.
     if az ad sp show \
