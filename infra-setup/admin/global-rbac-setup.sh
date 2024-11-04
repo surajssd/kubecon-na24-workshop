@@ -111,6 +111,7 @@ for ((i = 1; i <= NUMBER_OF_AUTO_GEN_USERS; i++)); do
   fi
 
   # Assign Directory Reader role to the user
+  # TODO: May hit this issue on the actual subscription because of the admin permissiosn we have.
   info "Assigning Directory Reader role to ${USER_PRINCIPAL_NAME}"
   ERROR_RESPONSE=$(curl -s -X POST "https://graph.microsoft.com/v1.0/roleManagement/directory/roleAssignments" -H "Authorization : Bearer ${ACCESS_TOKEN}" -H "Content-Type: application/json" -d '{
     "principalId": "'${USER_PRINCIPAL_ID}'",
