@@ -1,138 +1,206 @@
 {
   "definition": {
-      "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
-      "actions": {
-          "Response": {
-              "type": "Response",
-              "kind": "Http",
-              "inputs": {
-                  "statusCode": 200
-              },
-              "runAfter": {
-                  "HTTP": [
-                      "SUCCEEDED",
-                      "TIMEDOUT",
-                      "FAILED"
-                  ]
-              }
-          },
+    "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+    "contentVersion": "1.0.0.0",
+    "triggers": {
+      "When_a_HTTP_request_is_received": {
+        "type": "Request",
+        "kind": "Http"
+      }
+    },
+    "actions": {
+      "Initialize_variable": {
+        "runAfter": {},
+        "type": "InitializeVariable",
+        "inputs": {
+          "variables": [
+            {
+              "name": "principalId",
+              "type": "string",
+              "value": "@triggerBody()[0]['data']['claims']['http://schemas.microsoft.com/identity/claims/objectidentifier']"
+            }
+          ]
+        }
+      },
+      "Initialize_variable_1": {
+        "runAfter": {
+          "Initialize_variable": [
+            "Succeeded"
+          ]
+        },
+        "type": "InitializeVariable",
+        "inputs": {
+          "variables": [
+            {
+              "name": "resourceUri",
+              "type": "string",
+              "value": "@toLower(triggerBody()[0]['data']['resourceUri'])"
+            }
+          ]
+        }
+      },
+      "HTTP_2": {
+        "runAfter": {
+          "Initialize_variable_1": [
+            "Succeeded"
+          ]
+        },
+        "type": "Http",
+        "inputs": {
+          "uri": "https://management.azure.com@{variables('resourceUri')}/providers/Microsoft.Authorization/roleAssignments?api-version=2022-04-01",
+          "method": "GET",
+          "authentication": {
+            "type": "ManagedServiceIdentity"
+          }
+        },
+        "runtimeConfiguration": {
+          "contentTransfer": {
+            "transferMode": "Chunked"
+          }
+        }
+      },
+      "Filter_array_1": {
+        "runAfter": {
+          "HTTP_2": [
+            "Succeeded"
+          ]
+        },
+        "type": "Query",
+        "inputs": {
+          "from": "@body('HTTP_2')['value']",
+          "where": "@equals(and(equals(item()['properties']['createdBy'], '$LOGIC_APP_IDENTITY'),endsWith(item()['properties']['roleDefinitionId'],'8e3af657-a8ff-443c-a75c-2fe8c4bcb635')),true)"
+        }
+      },
+      "Condition_1": {
+        "actions": {
           "Condition": {
-              "type": "If",
-              "expression": {
-                  "and": [
-                      {
-                          "endsWith": [
-                              "@split(triggerBody()[0]['data']['resourceUri'], '/resourcegroups/')[1]",
-                              "-aks"
-                          ]
-                      }
-                  ]
-              },
-              "actions": {
-                  "HTTP_1": {
-                      "type": "Http",
-                      "inputs": {
-                          "uri": "https://management.azure.com/subscriptions/@{triggerBody()[0]['data']['subscriptionId']}/resourcegroups/@{substring(split(triggerBody()[0]['data']['resourceUri'], '/resourcegroups/')[1], 0, indexOf(split(triggerBody()[0]['data']['resourceUri'], '/resourcegroups/')[1], '-aks'))}/providers/Microsoft.Authorization/roleAssignments?api-version=2022-04-01",
-                          "method": "GET",
-                          "authentication": {
-                              "type": "ManagedServiceIdentity"
-                          }
-                      },
-                      "runtimeConfiguration": {
-                          "contentTransfer": {
-                              "transferMode": "Chunked"
-                          }
-                      }
-                  },
-                  "Filter_array": {
-                      "type": "Query",
-                      "inputs": {
-                          "from": "@body('HTTP_1')['value']",
-                          "where": "@equals(item()['properties']['createdBy'],'$LOGIC_APP_IDENTITY')"
-                      },
-                      "runAfter": {
-                          "HTTP_1": [
-                              "SUCCEEDED"
-                          ]
-                      }
-                  },
-                  "Set_variable_1": {
-                      "type": "SetVariable",
-                      "inputs": {
-                          "name": "principalId",
-                          "value": "@body('Filter_array')[0]['properties']['principalId']"
-                      },
-                      "runAfter": {
-                          "Filter_array": [
-                              "SUCCEEDED"
-                          ]
-                      }
+            "actions": {
+              "HTTP_1": {
+                "type": "Http",
+                "inputs": {
+                  "uri": "https://management.azure.com/subscriptions/@{triggerBody()[0]['data']['subscriptionId']}/resourcegroups/@{substring(split(variables('resourceUri'), '/resourcegroups/')[1], 0, indexOf(split(variables('resourceUri'), '/resourcegroups/')[1], '-aks'))}/providers/Microsoft.Authorization/roleAssignments?api-version=2022-04-01",
+                  "method": "GET",
+                  "authentication": {
+                    "type": "ManagedServiceIdentity"
                   }
-              },
-              "else": {
-                  "actions": {
-                      "Set_variable": {
-                          "type": "SetVariable",
-                          "inputs": {
-                              "name": "principalId",
-                              "value": "@triggerBody()[0]['data']['claims']['http://schemas.microsoft.com/identity/claims/objectidentifier']"
-                          }
-                      }
+                },
+                "runtimeConfiguration": {
+                  "contentTransfer": {
+                    "transferMode": "Chunked"
                   }
+                }
               },
-              "runAfter": {
-                  "Initialize_variable": [
-                      "SUCCEEDED"
+              "Filter_array": {
+                "runAfter": {
+                  "HTTP_1": [
+                    "Succeeded"
                   ]
+                },
+                "type": "Query",
+                "inputs": {
+                  "from": "@body('HTTP_1')['value']",
+                  "where": "@equals(item()['properties']['createdBy'],'$LOGIC_APP_IDENTITY')"
+                }
+              },
+              "Set_variable_1": {
+                "runAfter": {
+                  "Filter_array": [
+                    "Succeeded"
+                  ]
+                },
+                "type": "SetVariable",
+                "inputs": {
+                  "name": "principalId",
+                  "value": "@body('Filter_array')[0]['properties']['principalId']"
+                }
               }
+            },
+            "else": {
+              "actions": {}
+            },
+            "expression": {
+              "and": [
+                {
+                  "endsWith": [
+                    "@split(variables('resourceUri'), '/resourcegroups/')[1]",
+                    "-aks"
+                  ]
+                }
+              ]
+            },
+            "type": "If"
           },
           "HTTP": {
-              "type": "Http",
-              "inputs": {
-                  "uri": "https://management.azure.com@{triggerBody()[0]['data']['resourceUri']}/providers/Microsoft.Authorization/roleAssignments/@{guid()}?api-version=2022-04-01\n",
-                  "method": "PUT",
-                  "body": {
-                      "properties": {
-                          "roleDefinitionId": "/subscriptions/@{triggerBody()[0]['data']['subscriptionId']}/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
-                          "principalId": "@{variables('principalId')}"
-                      }
-                  },
-                  "authentication": {
-                      "type": "ManagedServiceIdentity"
-                  }
+            "runAfter": {
+              "Condition": [
+                "Succeeded"
+              ]
+            },
+            "type": "Http",
+            "inputs": {
+              "uri": "https://management.azure.com@{triggerBody()[0]['data']['resourceUri']}/providers/Microsoft.Authorization/roleAssignments/@{guid()}?api-version=2022-04-01\n",
+              "method": "PUT",
+              "body": {
+                "properties": {
+                  "roleDefinitionId": "/subscriptions/@{triggerBody()[0]['data']['subscriptionId']}/providers/Microsoft.Authorization/roleDefinitions/8e3af657-a8ff-443c-a75c-2fe8c4bcb635",
+                  "principalId": "@{variables('principalId')}"
+                }
               },
-              "runAfter": {
-                  "Condition": [
-                      "SUCCEEDED"
-                  ]
-              },
-              "runtimeConfiguration": {
-                  "contentTransfer": {
-                      "transferMode": "Chunked"
-                  }
+              "authentication": {
+                "type": "ManagedServiceIdentity"
               }
-          },
-          "Initialize_variable": {
-              "type": "InitializeVariable",
-              "inputs": {
-                  "variables": [
-                      {
-                          "name": "principalId",
-                          "type": "string"
-                      }
-                  ]
-              },
-              "runAfter": {}
+            },
+            "runtimeConfiguration": {
+              "contentTransfer": {
+                "transferMode": "Chunked"
+              }
+            }
           }
+        },
+        "runAfter": {
+          "Filter_array_1": [
+            "Succeeded"
+          ]
+        },
+        "else": {
+          "actions": {}
+        },
+        "expression": {
+          "and": [
+            {
+              "equals": [
+                "@length(body('Filter_array_1'))",
+                0
+              ]
+            }
+          ]
+        },
+        "type": "If"
       },
-      "contentVersion": "1.0.0.0",
-      "outputs": {},
-      "triggers": {
-          "When_a_HTTP_request_is_received": {
-              "type": "Request",
-              "kind": "Http"
-          }
+      "Response": {
+        "runAfter": {
+          "Condition_1": [
+            "Succeeded"
+          ]
+        },
+        "type": "Response",
+        "kind": "Http",
+        "inputs": {
+          "statusCode": 200
+        }
       }
+    },
+    "outputs": {},
+    "parameters": {
+      "$connections": {
+        "type": "Object",
+        "defaultValue": {}
+      }
+    }
   },
-  "kind": "Stateful"
+  "parameters": {
+    "$connections": {
+      "value": {}
+    }
+  }
 }
