@@ -97,4 +97,4 @@ az logic workflow update \
 
 rm $TMP_FILE
 
-echo "Logic App workflow updated successfully."
+info "Logic App workflow updated successfully."

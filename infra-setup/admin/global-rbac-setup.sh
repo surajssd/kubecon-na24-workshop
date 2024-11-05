@@ -20,14 +20,18 @@ fi
 SCOPE="/subscriptions/${AZURE_SUBSCRIPTION_ID}"
 
 # Check if the role exists
-if ! az role definition list --name "${ATTENDEES_ROLE_NAME}" --query [0].id --output tsv >/dev/null 2>&1; then
+ROLE_ID=$(az role definition list --name "${ATTENDEES_ROLE_NAME}" --query [0].id --output tsv)
+
+# check if $ROLE_ID is empty
+if [ -z "${ROLE_ID}" ]; then
   info "Creating role ${ATTENDEES_ROLE_NAME}..."
   az role definition create \
     --role-definition "$(envsubst <${SCRIPT_DIR}/role.json)"
+else
+  warn "Role ${ATTENDEES_ROLE_NAME} already exists, updating it."
+  az role definition update \
+    --role-definition "$(envsubst <${SCRIPT_DIR}/role.json)"
 fi
-
-az role definition update \
-  --role-definition "$(envsubst <${SCRIPT_DIR}/role.json)"
 
 # Check if the group exists
 if ! az ad group show --group "${IAM_GROUP_NAME}" --query id --output tsv >/dev/null 2>&1; then
@@ -63,6 +67,11 @@ info "Role assignment successful."
 # if the env var NUMBER_OF_AUTO_GEN_USERS has value more than 0
 # then create the users and assign them to the group
 if [ "${NUMBER_OF_AUTO_GEN_USERS}" -gt 0 ]; then
+  # Sometimes just doing the az login does not fetch all the details especially
+  # like the tenantDefaultDomain, so do a refresh. Some information here:
+  # https://stackoverflow.com/a/78887936/3848679
+  az account list --refresh >/dev/null
+
   ACCOUNT_DOMAIN_NAME=$(az account show \
     --subscription "${AZURE_SUBSCRIPTION_ID}" \
     --query tenantDefaultDomain -o tsv)
