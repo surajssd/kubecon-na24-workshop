@@ -40,7 +40,6 @@ az eventgrid system-topic create \
 
 # Create a Logic App workflow definition
 info "Creating Logic App workflow definition..."
-# TODO: Figure out if we need the definition file when creating a logic app!
 az logic workflow create \
   --definition "${LOGIC_APP_INIT_DEFINITION}" \
   --name "${LOGIC_APP_NAME}" \
@@ -88,8 +87,6 @@ az role assignment create \
 # Update the Logic App workflow definition
 info "Updating Logic App workflow definition..."
 
-# TODO: Use envsubst
-# replace LOGIC-APP-SYS-MANAGED-ID with $LOGIC_APP_IDENTITY
 TMP_FILE=$(mktemp)
 envsubst '$LOGIC_APP_IDENTITY' <$LOGIC_APP_FULL_DEFINITION >$TMP_FILE
 
