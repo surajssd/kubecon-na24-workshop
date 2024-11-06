@@ -42,6 +42,9 @@ function check_cli() {
             "genpolicy")
                 error "To install genpolicy run: ./util/download-genpolicy.sh"
                 ;;
+            "sha256sum")
+                error "On Linux, sha256sum is provided by the coreutils package. On OSX you can run: 'alias sha256sum=\"shasum -a 256\"'"
+                ;;
             esac
 
             exit 1
@@ -63,4 +66,5 @@ check_cli \
     skopeo \
     envsubst \
     jq \
-    genpolicy
+    genpolicy \
+    sha256sum
