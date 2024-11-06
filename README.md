@@ -1,11 +1,5 @@
 ## Prerequisites
 
-Make a copy of the sample env file and modify it as needed:
-
-```bash
-cp .env-sample .env
-```
-
 Source the env var file:
 
 ```bash
