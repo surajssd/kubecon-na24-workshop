@@ -2,6 +2,12 @@
 
 ## Prerequisites
 
+Login to the Azure:
+
+```bash
+az login
+```
+
 Source the env var file:
 
 ```bash
