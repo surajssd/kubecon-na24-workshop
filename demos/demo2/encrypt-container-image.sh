@@ -18,10 +18,10 @@ fi
 
 # Ensure we pull the images that are needed to perfom the encryption
 info "Pulling source image: ${SOURCE_IMAGE} ..."
-docker pull "${SOURCE_IMAGE}"
+docker pull --platform linux/amd64 "${SOURCE_IMAGE}"
 
 info "Pulling container image encryptor application: ${COCO_KEY_PROVIDER} ..."
-docker pull "${COCO_KEY_PROVIDER}"
+docker pull --platform linux/amd64 "${COCO_KEY_PROVIDER}"
 
 # If the encryption key file does not exists, then create it
 if [ ! -f "${ENCRYPTION_KEY_FILE}" ]; then
