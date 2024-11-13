@@ -166,6 +166,8 @@ PUBLIC_IP=$(kubectl -n default get svc nginx-encrypted \
 echo "http://${PUBLIC_IP}:80"
 ```
 
+Now open the above URL in the browser.
+
 ### Step 2.5: Verify from KBS
 
 ```bash
