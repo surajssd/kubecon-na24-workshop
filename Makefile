@@ -1,4 +1,4 @@
-DOCKER_IMAGE = "ghcr.io/surajssd/kubecon-npoa24-workshop-base"
+DOCKER_IMAGE = "ghcr.io/surajssd/kubecon-na24-workshop-base"
 DOCKER_IMAGE_DEMO2 = "ghcr.io/surajssd/kubecon-na24-workshop-demo2"
 
 ifeq ($(shell command -v podman 2> /dev/null),)
@@ -11,11 +11,11 @@ endif
 docker-build:
 	$(CMD) build -t $(DOCKER_IMAGE) .
 
-.PHONY: podman-run
+.PHONY: docker-run
 docker-run:
 	-$(CMD) run -d --name kubecon-na24-workshop-base \
 		-v $(shell pwd):/kubecon-na24-workshop-base \
-		-v /var/run/podman.sock:/var/run/podman.sock \
+		-v /var/run/docker.sock:/var/run/docker.sock \
 		-e USER_ID=$(shell id -u) \
 		-e GROUP_ID=$(shell id -g) \
 		-e USER_NAME=$(shell id -un) \
