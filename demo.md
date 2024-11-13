@@ -2,6 +2,12 @@
 
 ## Prerequisites
 
+Login to the Azure:
+
+```bash
+az login
+```
+
 Source the env var file:
 
 ```bash
@@ -165,6 +171,8 @@ PUBLIC_IP=$(kubectl -n default get svc nginx-encrypted \
     -o jsonpath='{.status.loadBalancer.ingress[0].ip}')
 echo "http://${PUBLIC_IP}:80"
 ```
+
+Now open the above URL in the browser.
 
 ### Step 2.5: Verify from KBS
 
