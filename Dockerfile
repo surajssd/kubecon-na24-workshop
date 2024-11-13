@@ -24,7 +24,8 @@ RUN ARCH="$(dpkg --print-architecture)" && \
 FROM ubuntu:22.04
 
 COPY --from=docker /usr/bin/docker /usr/bin/docker
-COPY --from=agentpolicy /kata/opt/kata/bin/genpolicy /usr/bin/genpolicy
+
+COPY --from=agentpolicy /kata/opt/kata/bin /opt/kata/bin
 
 RUN ARCH="$(dpkg --print-architecture)" && \
     apt update && \
@@ -44,7 +45,9 @@ RUN ARCH="$(dpkg --print-architecture)" && \
     curl -LO "https://dl.k8s.io/release/$(curl -L -s https://dl.k8s.io/release/stable.txt)/bin/linux/${ARCH}/kubectl" && chmod +x ./kubectl && mv ./kubectl /usr/bin && \
     curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash && mv ./kustomize /usr/bin && \
     curl -sL https://aka.ms/InstallAzureCLIDeb | bash && \
-    ln -s /usr/bin/batcat /usr/local/sbin/cat
+    ln -s /usr/bin/batcat /usr/local/sbin/cat && \
+    echo "export PATH="$PATH:/opt/kata/bin >> /etc/profile.d/50-kata.sh && \
+    chmod +x /etc/profile.d/50-kata.sh
 
 COPY entrypoint.sh /entrypoint.sh
 ENTRYPOINT [ "/entrypoint.sh" ]

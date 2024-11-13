@@ -11,6 +11,8 @@ endif
 docker-build:
 	$(CMD) build -t $(DOCKER_IMAGE) .
 
+# If running Podman, this assumes Docker Compatibility os enabled
+# https://podman-desktop.io/docs/migrating-from-docker/managing-docker-compatibility#procedure
 .PHONY: docker-run
 docker-run:
 	-$(CMD) run -d --name kubecon-na24-workshop-base \
@@ -24,6 +26,10 @@ docker-run:
 		$(DOCKER_IMAGE)
 	sleep 5
 	$(CMD) exec -it kubecon-na24-workshop-base su $(shell id -un)
+
+.PHONY: docker-stop
+docker-stop:
+	-$(CMD) stop kubecon-na24-workshop-base
 
 .PHONY: clean
 clean:
