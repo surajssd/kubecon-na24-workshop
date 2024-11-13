@@ -13,6 +13,7 @@ docker-run:
 		-e USER_ID=$(shell id -u) \
 		-e GROUP_ID=$(shell id -g) \
 		-e USER_NAME=$(shell id -un) \
+                --platform linux/amd64 \
 		--workdir /kubecon-na24-workshop-base \
 		--rm \
 		$(DOCKER_IMAGE)
