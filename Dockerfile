@@ -46,7 +46,7 @@ RUN ARCH="$(dpkg --print-architecture)" && \
     curl -s "https://raw.githubusercontent.com/kubernetes-sigs/kustomize/master/hack/install_kustomize.sh" | bash && mv ./kustomize /usr/bin && \
     curl -sL https://aka.ms/InstallAzureCLIDeb | bash && \
     ln -s /usr/bin/batcat /usr/local/sbin/cat && \
-    echo "export PATH="$PATH:/opt/kata/bin >> /etc/profile.d/50-kata.sh && \
+    echo "export PATH="\$PATH:/opt/kata/bin >> /etc/profile.d/50-kata.sh && \
     chmod +x /etc/profile.d/50-kata.sh
 
 COPY entrypoint.sh /entrypoint.sh
